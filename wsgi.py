@@ -34,16 +34,18 @@ def _get_cuneify_body(environ, transliteration):
                 try:
                     body += '{}<br />'.format(cuneify_line(cache, line, False).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
-                    body += 'Unknown symbol {} in line {}<br />'.format(exception.transliteration, line)
+                    body += 'Unknown symbol "{}" in "{}"<br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
-                    body += 'Possible formatting error in: {}<br />'.format(line)
+                    body += 'Possible formatting error in "{}"<br />'.format(line)
 
     except Exception as exc:
         # TODO remove generic exception catching
         # nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
 
-    body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
+    # TODO will need javascript to re-populate the text area, I believe
+    # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
+    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
