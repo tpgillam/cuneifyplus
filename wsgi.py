@@ -25,6 +25,8 @@ def _get_cuneify_body(environ, transliteration):
     cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
 
     body = ''
+    body += str(transliteration) + '\n'
+    body += type(transliteration) + '\n'
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             cuneiform = cuneify_line(cache, transliteration, False)
