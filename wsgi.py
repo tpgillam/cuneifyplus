@@ -2,21 +2,23 @@ import os
 
 from cgi import parse_qs
 from traceback import format_exc
+from urllib.parse import quote
 
-from cuneify_interface import FileCuneiformCache, cuneify_line
+from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
+                               cuneify_line)
 
 
 MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 
 
-def _get_input_form():
+def _get_input_form(initial='Enter transliteration here...'):
     ''' Return a form that the user can use to enter some transliterated text '''
     body = '''
     <form action="{}/cuneify" method="get">
-    <textarea rows="10" cols="80" name="input">Enter transliteration here...</textarea>
+    <textarea rows="10" cols="80" name="input"></textarea>
     <br /> <br />
     <input type="submit" value="Cuneify">
-    </form>'''.format(MY_URL)
+    </form>'''.format(MY_URL, initial)
     return body
 
 
@@ -29,12 +31,19 @@ def _get_cuneify_body(environ, transliteration):
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
-                body += '{}<br />'.format(cuneify_line(cache, line, False).replace('\n', '<br />'))
+                try:
+                    body += '{}<br />'.format(cuneify_line(cache, line, False).replace('\n', '<br />'))
+                except UnrecognisedSymbol as exception:
+                    body += 'Unknown symbol {} in line {}<br />'.format(exception.transliteration, line)
+                except TransliterationNotUnderstood:
+                    body += 'Possible formatting error in: {}<br />'.format(line)
+
     except Exception as exc:
-        # TODO nice formatting of error to be useful to the user
+        # TODO remove generic exception catching
+        # nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
 
-    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
+    body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
     # TODO this can probably be neatened up a little bit
     return body
 

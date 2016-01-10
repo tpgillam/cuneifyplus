@@ -13,11 +13,18 @@ class NoCuneiformMatch(Exception):
 
 
 class TransliterationNotUnderstood(Exception):
-    ''' The website didn't understand teh transliteration '''
+    ''' The website didn't understand the transliteration '''
 
 
 class UnrecognisedSymbol(Exception):
     ''' Indicate that the transliteration wasn't entirely converted to cuneiform '''
+
+    def __init__(self, transliteration, *args, **argv):
+        self.transliteration = transliteration
+        super().__init__(*args, **argv)
+        
+    def __str__(self):
+        return 'Unrecognised symbol in: {}'.format(self.transliteration)
 
 
 def contains_ascii(byte_array, ignore_space=True):
@@ -50,7 +57,7 @@ def get_cuneiform(transliteration):
         if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
             raise TransliterationNotUnderstood
         if contains_ascii(result):
-            raise UnrecognisedSymbol('Unrecognised symbol in: {}'.format(transliteration))
+            raise UnrecognisedSymbol(transliteration)
         return result
 
 
