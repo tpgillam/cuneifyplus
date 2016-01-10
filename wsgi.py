@@ -25,16 +25,15 @@ def _get_cuneify_body(environ, transliteration):
     cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
 
     body = ''
-    body += str(transliteration) + '<br />'
-    body += str(type(transliteration))  + '<br />'
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
-                body += '{}<br />'.format(cuneify_line(cache, line, True).replace('\n', '<br />'))
+                body += '{}<br />'.format(cuneify_line(cache, line, False).replace('\n', '<br />'))
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
 
+    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
