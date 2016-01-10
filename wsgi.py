@@ -3,15 +3,21 @@ from cuneify_interface import FileCuneiformCache, cuneify_line
 
 def application(environ, start_response):
     ''' Entry point for the application '''
-    response_body = 'hello'
-    raise ValueError
-    # with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
-    #     response_body =+ cuneify_line(cache, 'd-un KEZ2')
+    response_body = '''<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head>
+<body>
+{}
+</body></html>'''
+
+    with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
+        cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
+    response_body = response_body.format(cuneiform)
     response_body = response_body.encode('utf-8')
 
     status = '200 OK'
-    ctype = 'text/plain'
-    # ctype = 'text/html'
+    # ctype = 'text/plain'
+    ctype = 'text/html'
     response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
     start_response(status, response_headers)
     return [response_body]
