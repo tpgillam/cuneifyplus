@@ -3,9 +3,9 @@ from cuneify_interface import FileCuneiformCache, cuneify_line
 
 def application(environ, start_response):
     ''' Entry point for the application '''
-    response_body = ''
-    with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
-        response_body =+ cuneify_line(cache, 'd-un KEZ2')
+    response_body = 'hello'
+    # with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
+    #     response_body =+ cuneify_line(cache, 'd-un KEZ2')
     response_body = response_body.encode('utf-8')
 
     status = '200 OK'
