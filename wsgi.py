@@ -12,19 +12,21 @@ def application(environ, start_response):
 {}
 </body></html>'''
 
+    body = ''
     try:
         cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
-        body = str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
+
+        body += str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
         body += '\n'
         body += str(os.stat(cache_file_path))
 
 
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
-        body = cuneiform
+        body += cuneiform
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
-        body = str(exc)
+        body += str(exc)
 
     response_body = response_body.format(body)
     response_body = response_body.encode('utf-8')
