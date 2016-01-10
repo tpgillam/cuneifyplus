@@ -1,6 +1,7 @@
 import os
 
 from cgi import parse_qs
+from traceback import format_exc
 
 from cuneify_interface import FileCuneiformCache, cuneify_line
 
@@ -30,7 +31,7 @@ def _get_cuneify_body(environ, transliteration):
         body += cuneiform
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
-        body += str(exc)
+        body += format_exc()
 
     # TODO this can probably be neatened up a little bit
     return body
