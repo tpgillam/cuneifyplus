@@ -19,6 +19,9 @@ def application(environ, start_response):
         body += str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
         body += '\n'
         body += str(os.stat(cache_file_path))
+        with open('.vimrc') as f:
+            lines = ''.join(line for line in f)
+        body += lines
 
 
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
