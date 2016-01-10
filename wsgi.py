@@ -5,6 +5,19 @@ from cgi import parse_qs
 from cuneify_interface import FileCuneiformCache, cuneify_line
 
 
+MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
+
+
+def _get_input_form():
+    ''' Return a form that the user can use to enter some transliterated text '''
+    body = '''
+    <form action="{}/cuneify" method="get">
+    <textarea rows="10" cols="80" name="input">Enter transliteration here...</textarea>
+    <input type="submit">
+    </form>'''.format(MY_URL)
+    return body
+
+
 def _get_cuneify_body(environ, transliteration):
     ''' Return the HTML body contents when we've been given a transliteration '''
     # We use a cache in the data directory. This isn't touched by the deployment process
@@ -13,7 +26,7 @@ def _get_cuneify_body(environ, transliteration):
     body = ''
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
-            cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
+            cuneiform = cuneify_line(cache, transliteration, False)
         body += cuneiform
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
@@ -30,9 +43,14 @@ def application(environ, start_response):
     path_info = environ['PATH_INFO']
     parameters = parse_qs(environ['QUERY_STRING'])
     if path_info == '/cuneify':
-        body = _get_cuneify_body(environ, parameters['input'])
+        try:
+            transliteration = parameters['input']
+        except KeyError:
+            body = _get_input_form()
+        else:
+            body = _get_cuneify_body(environ, transliteration)
     else:
-        body = 'mooooo'
+        body =  _get_input_form()
 
 
     response_body = '''<!doctype html>
