@@ -29,8 +29,8 @@ def _get_cuneify_body(environ, transliteration):
     body += str(type(transliteration))  + '<br />'
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
-            cuneiform = cuneify_line(cache, transliteration, False)
-        body += cuneiform
+            for line in transliteration.split('\n'):
+                body += '{}<br />'.format(cuneify_line(cache, transliteration, False))
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
@@ -47,7 +47,8 @@ def application(environ, start_response):
     parameters = parse_qs(environ['QUERY_STRING'])
     if path_info == '/cuneify':
         try:
-            transliteration = parameters['input']
+            # Not sure why the form requires us to take the zeroth element
+            transliteration = parameters['input'][0]
         except KeyError:
             body = _get_input_form()
         else:
