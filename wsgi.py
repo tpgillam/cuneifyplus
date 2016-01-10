@@ -14,7 +14,8 @@ def _get_input_form():
     body = '''
     <form action="{}/cuneify" method="get">
     <textarea rows="10" cols="80" name="input">Enter transliteration here...</textarea>
-    <input type="submit">
+    <br /> <br />
+    <input type="submit" value="Cuneify">
     </form>'''.format(MY_URL)
     return body
 
@@ -61,6 +62,11 @@ def application(environ, start_response):
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head>
 <body>
 {}
+<br />
+<br />
+<br />
+Powered by <a href="http://oracc.museum.upenn.edu/saao/knpp/cuneiformrevealed/cuneify/">Cuneify</a>,
+by Steve Tinney.
 </body></html>'''
 
 
