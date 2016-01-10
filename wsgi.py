@@ -12,11 +12,13 @@ def application(environ, start_response):
 {}
 </body></html>'''
 
-    cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
-    body = str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
-    body += '\n'
-    body += os.stat(cache_file_path)
     try:
+        cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
+        body = str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
+        body += '\n'
+        body += os.stat(cache_file_path)
+
+
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
         body = cuneiform
