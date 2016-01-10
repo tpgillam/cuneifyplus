@@ -30,7 +30,7 @@ def _get_cuneify_body(environ, transliteration):
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
-                body += '{}<br />'.format(cuneify_line(cache, transliteration, False))
+                body += '{}<br />'.format(cuneify_line(cache, transliteration, True))
     except Exception as exc:
         # TODO nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
