@@ -1,3 +1,5 @@
+import os
+
 from cuneify_interface import FileCuneiformCache, cuneify_line
 
 
@@ -10,15 +12,14 @@ def application(environ, start_response):
 {}
 </body></html>'''
 
-    # try:
-    #     with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
-    #         cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
-    #     response_body = response_body.format(cuneiform)
-    # except Exception as exc:
-    #     # TODO nice formatting of error to be useful to the user
-    #     response_body = response_body.format(exc)
-
-    response_body = response_body.format(environ)
+    cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
+    try:
+        with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
+            cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
+        response_body = response_body.format(cuneiform)
+    except Exception as exc:
+        # TODO nice formatting of error to be useful to the user
+        response_body = response_body.format(exc)
 
     response_body = response_body.encode('utf-8')
 
