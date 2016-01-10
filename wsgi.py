@@ -10,12 +10,16 @@ def application(environ, start_response):
 {}
 </body></html>'''
 
-    try:
-        with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
-            cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
-        response_body = response_body.format(cuneiform)
-    except Exception as exc:
-        response_body = response_body.format(exc)
+    # try:
+    #     with FileCuneiformCache(cache_file_path='cuneiform_cache.pickle') as cache:
+    #         cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
+    #     response_body = response_body.format(cuneiform)
+    # except Exception as exc:
+    #     # TODO nice formatting of error to be useful to the user
+    #     response_body = response_body.format(exc)
+
+    response_body = response_body.format(environ)
+
     response_body = response_body.encode('utf-8')
 
     status = '200 OK'
