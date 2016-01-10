@@ -30,7 +30,7 @@ def application(environ, start_response):
     path_info = environ['PATH_INFO']
     parameters = parse_qs(environ['QUERY_STRING'])
     if path_info == '/cuneify':
-        body = _get_cuneify_body(parameters['input'])
+        body = _get_cuneify_body(environ, parameters['input'])
     else:
         body = 'mooooo'
 
