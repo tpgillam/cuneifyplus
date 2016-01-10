@@ -1,10 +1,40 @@
 import os
 
+from cgi import parse_qs
+
 from cuneify_interface import FileCuneiformCache, cuneify_line
+
+
+def _get_cuneify_body(environ, transliteration):
+    ''' Return the HTML body contents when we've been given a transliteration '''
+    # We use a cache in the data directory. This isn't touched by the deployment process
+    cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
+
+    body = ''
+    try:
+        with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
+            cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
+        body += cuneiform
+    except Exception as exc:
+        # TODO nice formatting of error to be useful to the user
+        body += str(exc)
+
+    # TODO this can probably be neatened up a little bit
+    return body
 
 
 def application(environ, start_response):
     ''' Entry point for the application '''
+
+    # Use the appropriate behaviour here
+    path_info = environ['PATH_INFO']
+    parameters = parse_qs(environ['QUERY_STRING'])
+    if path_info == '/cuneify':
+        body = _get_cuneify_body(parameters['input'])
+    else:
+        body = 'mooooo'
+
+
     response_body = '''<!doctype html>
 <html lang="en">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head>
@@ -12,24 +42,6 @@ def application(environ, start_response):
 {}
 </body></html>'''
 
-    body = ''
-    try:
-        cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
-
-        body += str(os.listdir(environ['OPENSHIFT_DATA_DIR']))
-        body += '\n'
-        body += str(os.stat(cache_file_path))
-        with open('.vimrc') as f:
-            lines = ''.join(line for line in f)
-        body += lines
-
-
-        with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
-            cuneiform = cuneify_line(cache, 'd-un KESZ2', False)
-        body += cuneiform
-    except Exception as exc:
-        # TODO nice formatting of error to be useful to the user
-        body += str(exc)
 
     response_body = response_body.format(body)
     response_body = response_body.encode('utf-8')
