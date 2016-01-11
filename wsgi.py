@@ -35,9 +35,9 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
                 try:
                     body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
-                    body += 'Unknown symbol "{}" in "{}"<br />'.format(exception.transliteration, line)
+                    body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
-                    body += 'Possible formatting error in "{}"<br />'.format(line)
+                    body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
     except Exception as exc:
         # TODO remove generic exception catching
