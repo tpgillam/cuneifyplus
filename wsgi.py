@@ -17,12 +17,13 @@ def _get_input_form(initial='Enter transliteration here...'):
     <form action="{}/cuneify" method="get">
     <textarea rows="10" cols="80" name="input"></textarea>
     <br /> <br />
+    <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <input type="submit" value="Cuneify">
     </form>'''.format(MY_URL, initial)
     return body
 
 
-def _get_cuneify_body(environ, transliteration):
+def _get_cuneify_body(environ, transliteration, show_transliteration):
     ''' Return the HTML body contents when we've been given a transliteration '''
     # We use a cache in the data directory. This isn't touched by the deployment process
     cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
@@ -32,7 +33,7 @@ def _get_cuneify_body(environ, transliteration):
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
                 try:
-                    body += '{}<br />'.format(cuneify_line(cache, line, False).replace('\n', '<br />'))
+                    body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
                     body += 'Unknown symbol "{}" in "{}"<br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
@@ -63,7 +64,8 @@ def application(environ, start_response):
         except KeyError:
             body = _get_input_form()
         else:
-            body = _get_cuneify_body(environ, transliteration)
+            show_transliteration = 'show_transliteration' in parameters
+            body = _get_cuneify_body(environ, transliteration, show_transliteration)
     else:
         body =  _get_input_form()
 
