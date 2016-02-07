@@ -8,8 +8,11 @@ from urllib.parse import quote, urlencode
 from urllib.request import urlopen
 
 
+class NotAToken(Exception):
+    ''' We expected a single token, not multiple tokens '''
+
 class NoCuneiformMatch(Exception):
-    ''' No cunifiorm section could be found '''
+    ''' No cuneifiorm section could be found '''
 
 
 class TransliterationNotUnderstood(Exception):
@@ -27,6 +30,18 @@ class UnrecognisedSymbol(Exception):
         return 'Unrecognised symbol in: {}'.format(self.transliteration)
 
 
+TOKEN_SEPARATORS = ('-', ' ', ',')
+
+
+REPLACEMENT_MAP = {'š': 'sz', 
+                   'ṣ': 's,', 
+                   'ṭ': 't,',
+                   'ḫ': 'h',
+                   }
+ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
+GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
+
+
 def contains_ascii(byte_array, ignore_space=True):
     ''' Returns true if any character in the given bytes object is an ascii character. '''
     for character in byte_array:
@@ -34,18 +49,46 @@ def contains_ascii(byte_array, ignore_space=True):
             continue
         if character < 128:
             return True
+    # Also include non-cuneiform UTF-8 symbols
+    if character in REPLACEMENT_MAP or character in ACUTE_VOWELS or character in GRAVE_VOWELS:
+        return True
     return False
+
+
+def _remove_abbreviations(transliteration):
+    ''' Remove common shorthands in tokens '''
+    # Due to corrections applied here, we require that this is not a token
+    if any(separator in transliteration for separator in TOKEN_SEPARATORS):
+        raise NotAToken()
+
+    for original, replacement in REPLACEMENT_MAP.items():
+        transliteration = transliteration.replace(original, replacement)
+
+    # Add the number 2 to the token for acute vowels
+    for original, replacement in ACUTE_VOWELS.items():
+        if original in transliteration:
+            transliteration += '2'
+        transliteration = transliteration.replace(original, replacement)
+
+    # Add the number 3 to the token for grave vowels
+    for original, replacement in GRAVE_VOWELS.items():
+        if original in transliteration:
+            transliteration += '3'
+        transliteration = transliteration.replace(original, replacement)
+    return transliteration
 
 
 def get_cuneiform(transliteration):
     ''' Get the UTF-8 encoded cuneiform for the given transliteration string '''
     # Debugging
     # print('Looking up: "{}"'.format(transliteration))
+    transliteration = _remove_abbreviations(transliteration)
 
     url = 'http://oracc.museum.upenn.edu/cgi-bin/cuneify'
     # TODO in python 3.5 we can use the quote_via argument to urlencode
     # values = {'input': transliteration}
     # data = urlencode(values, quote_via=quote)
+    # data = 'input={}'.format(quote(transliteration.encode('utf-8')))
     data = 'input={}'.format(quote(transliteration))
     url = '{}?{}'.format(url, data)
     with urlopen(url) as response:
@@ -130,6 +173,7 @@ def cuneify_line(cache, transliteration, show_transliteration):
         Should be used whilst in the context of cache. 
     '''
     transliteration = transliteration.strip()
+    # Split using alphanumeric characters (\w)
     tokens = re.findall('[\w]+', transliteration)
 
     # It's a much easier code path if we just show the cuneiform
