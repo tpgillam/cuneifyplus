@@ -36,10 +36,16 @@ TOKEN_SEPARATORS = ('-', ' ', ',')
 REPLACEMENT_MAP = {'š': 'sz', 
                    'ṣ': 's,', 
                    'ṭ': 't,',
+                   'ĝ': 'j',
                    'ḫ': 'h',
                    }
 ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
 GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
+
+# Extend the dictionaries at import time to include uppercase versions
+REPLACEMENT_MAP.update({key.upper(): value.upper() for key, value in REPLACEMENT_MAP.items()})
+ACUTE_VOWELS.update({key.upper(): value.upper() for key, value in ACUTE_VOWELS.items()})
+GRAVE_VOWELS.update({key.upper(): value.upper() for key, value in GRAVE_VOWELS.items()})
 
 
 def contains_ascii(byte_array, ignore_space=True):
