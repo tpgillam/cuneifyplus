@@ -30,7 +30,9 @@ class UnrecognisedSymbol(Exception):
         return 'Unrecognised symbol in: {}'.format(self.transliteration)
 
 
-TOKEN_SEPARATORS = ('-', ' ', ',')
+# The separators between tokens. Store regex separately due to escaping of dot
+TOKEN_SEPARATORS = ('-', ' ', '.')
+TOKEN_REGEX = '-| |\.'
 
 
 REPLACEMENT_MAP = {'š': 'sz', 
@@ -38,6 +40,13 @@ REPLACEMENT_MAP = {'š': 'sz',
                    'ṭ': 't,',
                    'ĝ': 'j',
                    'ḫ': 'h',
+                   'ʾ': "'",
+                   '₄': '4',   # Subscripted numbers correspond to actual numbers in the original
+                   '₅': '5',
+                   '₆': '6',
+                   '₇': '7',
+                   '₈': '8',
+                   '₉': '9',
                    }
 ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
 GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
@@ -63,7 +72,7 @@ def contains_ascii(byte_array, ignore_space=True):
 
 def _remove_abbreviations(transliteration):
     ''' Remove common shorthands in tokens '''
-    # Due to corrections applied here, we require that this is not a token
+    # Due to corrections applied here, we require that this is a token
     if any(separator in transliteration for separator in TOKEN_SEPARATORS):
         raise NotAToken()
 
@@ -180,7 +189,7 @@ def cuneify_line(cache, transliteration, show_transliteration):
     '''
     transliteration = transliteration.strip()
     # Split using alphanumeric characters (\w)
-    tokens = re.findall('[\w]+', transliteration)
+    tokens = re.split(TOKEN_REGEX, transliteration)
 
     # It's a much easier code path if we just show the cuneiform
     if not show_transliteration:
@@ -190,7 +199,7 @@ def cuneify_line(cache, transliteration, show_transliteration):
     #
     # tok1.tok2  tok3-tok4-5-   6
     # A    BBBBB CC   DDD  EEEE F
-    separators = re.findall('[^\w]+', transliteration)
+    separators = re.findall(TOKEN_REGEX, transliteration)
     separators.append('')
 
     line_original = ''
