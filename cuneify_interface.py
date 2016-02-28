@@ -41,7 +41,12 @@ REPLACEMENT_MAP = {'š': 'sz',
                    'ĝ': 'j',
                    'ḫ': 'h',
                    'ʾ': "'",
-                   '₄': '4',   # Subscripted numbers correspond to actual numbers in the original
+                   # Subscripted numbers correspond to actual numbers in the original
+                   '₀': '0',   
+                   '₁': '1',   
+                   '₂': '2',   
+                   '₃': '3',   
+                   '₄': '4',   
                    '₅': '5',
                    '₆': '6',
                    '₇': '7',
