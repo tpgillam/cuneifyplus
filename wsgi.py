@@ -62,11 +62,13 @@ def application(environ, start_response):
     for thing in form:
         print('thing')
 
+    print('path_info:', path_info)
     if path_info == '/cuneify':
         try:
             # Not sure why the form requires us to take the zeroth element
             # transliteration = parameters['input'][0]
-            transliteration = form['input'].value
+            transliteration = form.getvalue('input')
+            print(transliteration)
         except KeyError:
             # print(form)
             # print(form['input'])
