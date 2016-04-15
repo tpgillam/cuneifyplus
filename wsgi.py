@@ -57,13 +57,15 @@ def application(environ, start_response):
     # Use the appropriate behaviour here
     path_info = environ['PATH_INFO']
     # parameters = parse_qs(environ['QUERY_STRING'])
-    form = cgi.FieldStorage()
+    form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
     print(form)
     for thing in form:
         print('thing')
 
     print('path_info:', path_info)
     if path_info == '/cuneify':
+        # FIXME getvalue returns None if it can't find anything, so remove
+        # try-except and replace with an if statement
         try:
             # Not sure why the form requires us to take the zeroth element
             # transliteration = parameters['input'][0]
@@ -76,7 +78,7 @@ def application(environ, start_response):
             body = _get_input_form()
         else:
             # show_transliteration = 'show_transliteration' in parameters
-            show_transliteration = parameters.show_transliteration.value
+            show_transliteration = form.getvalue('show_transliteration')
             body = _get_cuneify_body(environ, transliteration, show_transliteration)
     else:
         body =  _get_input_form()
