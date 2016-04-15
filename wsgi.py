@@ -62,7 +62,8 @@ def application(environ, start_response):
             # There is no transliteration, so show the input form again
             body = _get_input_form()
         else:
-            show_transliteration = form.getvalue('show_transliteration').lower() == 'on'
+            show_transliteration_value = form.getvalue('show_transliteration')
+            show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
             body = _get_cuneify_body(environ, transliteration, show_transliteration)
     else:
         body =  _get_input_form()
