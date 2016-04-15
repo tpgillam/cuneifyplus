@@ -58,6 +58,9 @@ def application(environ, start_response):
     path_info = environ['PATH_INFO']
     # parameters = parse_qs(environ['QUERY_STRING'])
     form = cgi.FieldStorage()
+    print(form)
+    for thing in form:
+        print('thing')
 
     if path_info == '/cuneify':
         try:
@@ -65,10 +68,10 @@ def application(environ, start_response):
             # transliteration = parameters['input'][0]
             transliteration = form['input'].value
         except KeyError:
-            print(form)
-            print(form['input'])
-            raise
-        #     body = _get_input_form()
+            # print(form)
+            # print(form['input'])
+            # raise
+            body = _get_input_form()
         else:
             # show_transliteration = 'show_transliteration' in parameters
             show_transliteration = parameters.show_transliteration.value
