@@ -2,7 +2,7 @@ import cgi
 import os
 
 from traceback import format_exc
-from urllib.parse import parse_qs, quote
+from urllib.parse import quote
 
 from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
                                cuneify_line)
