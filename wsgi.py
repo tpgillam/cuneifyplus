@@ -1,8 +1,8 @@
+import cgi
 import os
 
-from cgi import parse_qs
 from traceback import format_exc
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote
 
 from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
                                cuneify_line)
@@ -14,7 +14,7 @@ MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 def _get_input_form(initial='Enter transliteration here...'):
     ''' Return a form that the user can use to enter some transliterated text '''
     body = '''
-    <form action="{}/cuneify" method="get">
+    <form action="{}/cuneify" method="post">
     <textarea rows="10" cols="80" name="input"></textarea>
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
@@ -56,15 +56,19 @@ def application(environ, start_response):
 
     # Use the appropriate behaviour here
     path_info = environ['PATH_INFO']
-    parameters = parse_qs(environ['QUERY_STRING'])
+    # parameters = parse_qs(environ['QUERY_STRING'])
+    form = cgi.FieldStorage()
+
     if path_info == '/cuneify':
         try:
             # Not sure why the form requires us to take the zeroth element
-            transliteration = parameters['input'][0]
+            # transliteration = parameters['input'][0]
+            transliteration = form['input'].value
         except KeyError:
             body = _get_input_form()
         else:
-            show_transliteration = 'show_transliteration' in parameters
+            # show_transliteration = 'show_transliteration' in parameters
+            show_transliteration = parameters.show_transliteration.value
             body = _get_cuneify_body(environ, transliteration, show_transliteration)
     else:
         body =  _get_input_form()
