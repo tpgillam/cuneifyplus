@@ -64,8 +64,8 @@ def application(environ, start_response):
             # Not sure why the form requires us to take the zeroth element
             # transliteration = parameters['input'][0]
             transliteration = form['input'].value
-        except KeyError:
-            body = _get_input_form()
+        # except KeyError:
+        #     body = _get_input_form()
         else:
             # show_transliteration = 'show_transliteration' in parameters
             show_transliteration = parameters.show_transliteration.value
