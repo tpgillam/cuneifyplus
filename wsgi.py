@@ -33,6 +33,11 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
     try:
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
+                # Make empty lines appear as breaks in the output
+                line = line.strip()
+                if line == '':
+                    body += '<br />'
+
                 try:
                     body += '<span class="assurbanipal">{}</span><br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
