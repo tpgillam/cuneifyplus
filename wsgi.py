@@ -52,7 +52,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
     return body
 
 
-def construct_font_response(path_info):
+def construct_font_response(environ, path_info):
     ''' Given a requested path, construct a response with the data from the requested font file '''
     font_directory = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'fonts') 
 
@@ -81,7 +81,7 @@ def application(environ, start_response):
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
     if path_info.startswith('/' + FONTS_PATH_NAME):
         # Return the static font file
-        return construct_font_response(path_info)
+        return construct_font_response(environ, path_info)
     elif path_info == '/cuneify':
         transliteration = form.getvalue('input')
         if transliteration is None:
