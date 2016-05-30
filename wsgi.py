@@ -31,12 +31,13 @@ def _get_input_form(initial='Enter transliteration here...'):
                                    for name, description in FONT_NAMES.items()])
     body = '''
     <form action="{}/cuneify" method="post">
-    <textarea rows="10" cols="80" name="input">{}</textarea>
+    <textarea rows="10" cols="80" name="input"></textarea>
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <select name="font_name">{}</select>
     <input type="submit" value="Cuneify">
-    </form>'''.format(MY_URL, initial, font_name_selection)
+    </form>'''.format(MY_URL, font_name_selection)
+    # TODO Use 'initial' when it can be made to disappear on entry into widget
     return body
 
 
@@ -56,7 +57,8 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
                     continue
 
                 try:
-                    body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+                    # body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+                    body += '{}<br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
                     body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
