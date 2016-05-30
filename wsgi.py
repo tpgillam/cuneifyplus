@@ -59,7 +59,7 @@ def construct_font_response(environ, path_info):
     font_path = os.path.normpath(path_info.replace(FONTS_PATH_NAME, font_directory))
 
     if not font_path.startswith(font_directory):
-        raise RuntimeError("Requesting font that is not in fonts directory")
+        raise RuntimeError("Requesting font {} that is not in fonts directory {}".format(font_path, font_directory))
 
     # The response body is just what we get from reading the font.
     # TODO we could cache this in memory if reading the font is slow
