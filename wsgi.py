@@ -27,7 +27,7 @@ def _get_input_form(initial='Enter transliteration here...'):
 def _get_cuneify_body(environ, transliteration, show_transliteration):
     ''' Return the HTML body contents when we've been given a transliteration '''
     # We use a cache in the data directory. This isn't touched by the deployment process
-    cache_file_path = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle')
+    cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
 
     body = ''
     try:
