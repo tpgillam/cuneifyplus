@@ -91,8 +91,13 @@ def construct_font_response(environ, start_response, path_info):
         response_body = f.read()
      
     status = '200 OK'
-    # TODO if returning font other than ttf, use appropriate MIME type
-    ctype = 'application/x-font-ttf'
+    if font_path.endswith('.woff'):
+        ctype = 'application/x-font-woff'
+    elif font_path.endswith('.eot'):
+        ctype = 'application/vnd.ms-fontobject'
+    elif font_path.endswith('.ttf'):
+        ctype = 'application/x-font-ttf'
+
     response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
     start_response(status, response_headers)
     return [response_body]
@@ -122,7 +127,9 @@ def application(environ, start_response):
     # All the CSS representing font classes
     font_info = '\n'.join(['''@font-face {{{{
     font-family: {1};
-    src: url(fonts/{1}.ttf);
+    src: url(fonts/{1}.woff) format('woff'),
+         url(fonts/{1}.eot) format('embedded-opentype'),
+         url(fonts/{1}.ttf) format('truetype');
 }}}}
 .{0} {{{{
     font-family: {1};
