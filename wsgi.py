@@ -37,6 +37,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
                 line = line.strip()
                 if line == '':
                     body += '<br />'
+                    continue
 
                 try:
                     body += '<span class="assurbanipal">{}</span><br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
