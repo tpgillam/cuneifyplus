@@ -8,7 +8,7 @@ from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood,
                                cuneify_line)
 
 
-FONTS_PATH_NAME = 'fonts'
+FONTS_PATH_NAME = '/fonts'
 MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 
 
@@ -79,7 +79,7 @@ def application(environ, start_response):
     # Use the appropriate behaviour here
     path_info = environ['PATH_INFO']
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
-    if path_info.startswith('/' + FONTS_PATH_NAME):
+    if path_info.startswith(FONTS_PATH_NAME):
         # Return the static font file
         return construct_font_response(environ, path_info)
     elif path_info == '/cuneify':
