@@ -10,7 +10,7 @@ from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood,
 
 
 # A mapping from font name to description
-FONT_NAMES = OrderedDict(
+FONT_NAMES = OrderedDict([
         ('Santakku', 'Cursive Old Babylonian'),
         ('CuneiformOB', 'Monumental Old Babylonian'),
         ('SantakkuM', 'Monumental Old Babylonian'),
@@ -19,7 +19,7 @@ FONT_NAMES = OrderedDict(
         ('UllikummiC', 'Hittite'),
         ('Assurbanipal', 'Neo-Assyrian'),
         ('CuneiformNA', 'Neo-Assyrian'),
-        )
+        ])
 
 FONTS_PATH_NAME = '/fonts'
 MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
