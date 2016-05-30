@@ -54,7 +54,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
 
 def construct_font_response(path_info):
     ''' Given a requested path, construct a response with the data from the requested font file '''
-    font_directory = os.path.append(environ['OPENSHIFT_DATA_DIR'], 'fonts') 
+    font_directory = os.path.join(environ['OPENSHIFT_DATA_DIR'], 'fonts') 
 
     font_path = os.path.normpath(path_info.replace(FONTS_PATH_NAME, font_directory))
 
