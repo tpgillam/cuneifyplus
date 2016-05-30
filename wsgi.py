@@ -98,14 +98,14 @@ def application(environ, start_response):
 <html lang="en">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <style>
-@font-face {
+@font-face {{
     font-family: Assurbanipal;
     src: url(fonts/Assurbanipal.ttf);
-}
+}}
 
-.assurbanipal {
+.assurbanipal {{
     font-family: Assurbanipal;
-}
+}}
 
 </style>
 </head>
