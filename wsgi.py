@@ -34,7 +34,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
         with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
             for line in transliteration.split('\n'):
                 try:
-                    body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+                    body += '<span class='assurbanipal'>{}</span><br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
                     body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
@@ -96,7 +96,19 @@ def application(environ, start_response):
 
     response_body = '''<!doctype html>
 <html lang="en">
-<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head>
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<style>
+@font-face {
+    font-family: Assurbanipal;
+    src: url(fonts/Assurbanipal.ttf);
+}
+
+.assurbanipal {
+    font-family: Assurbanipal;
+}
+
+</style>
+</head>
 <body>
 {}
 <br />
