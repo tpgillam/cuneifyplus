@@ -1,6 +1,7 @@
 import cgi
 import os
 
+from collections import OrderedDict
 from traceback import format_exc
 from urllib.parse import quote
 
@@ -8,24 +9,39 @@ from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood,
                                cuneify_line)
 
 
+# A mapping from font name to description
+FONT_NAMES = OrderedDict(
+        ('Santakku', 'Cursive Old Babylonian'),
+        ('CuneiformOB', 'Monumental Old Babylonian'),
+        ('SantakkuM', 'Monumental Old Babylonian'),
+        ('UllikummiA', 'Hittite'),
+        ('UllikummiB', 'Hittite'),
+        ('UllikummiC', 'Hittite'),
+        ('Assurbanipal', 'Neo-Assyrian'),
+        ('CuneiformNA', 'Neo-Assyrian'),
+        )
+
 FONTS_PATH_NAME = '/fonts'
 MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 
 
 def _get_input_form(initial='Enter transliteration here...'):
     ''' Return a form that the user can use to enter some transliterated text '''
+    font_name_selection = ''.join(['<option value="{0}">{1} (font: {0})</option>'.format(name, description) 
+                                   for name, description in FONT_NAMES.items()])
     body = '''
     <form action="{}/cuneify" method="post">
-    <textarea rows="10" cols="80" name="input"></textarea>
+    <textarea rows="10" cols="80" name="input">{}</textarea>
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
+    <select name="font_name">{}</select>
     <input type="submit" value="Cuneify">
-    </form>'''.format(MY_URL, initial)
+    </form>'''.format(MY_URL, initial, font_name_selection)
     return body
 
 
-def _get_cuneify_body(environ, transliteration, show_transliteration):
-    ''' Return the HTML body contents when we've been given a transliteration '''
+def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
+    ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
     # We use a cache in the data directory. This isn't touched by the deployment process
     cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
 
@@ -40,7 +56,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
                     continue
 
                 try:
-                    body += '<span class="assurbanipal">{}</span><br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+                    body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
                 except UnrecognisedSymbol as exception:
                     body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
                 except TransliterationNotUnderstood:
@@ -96,19 +112,19 @@ def application(environ, start_response):
         else:
             show_transliteration_value = form.getvalue('show_transliteration')
             show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
-            body = _get_cuneify_body(environ, transliteration, show_transliteration)
+            font_name = form.getvalue('font_name')
+            body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
     else:
         body =  _get_input_form()
 
     # All the CSS representing font classes
-    font_names = ['Assurbanipal', 'CuneiformNA', 'CuneiformOB', 'Santakku', 'SantakkuM', 'UllikummiA', 'UllikummiB', 'UllikummiC']
     font_info = '\n'.join(['''@font-face {{{{
     font-family: {1};
     src: url(fonts/{1}.ttf);
 }}}}
 .{0} {{{{
     font-family: {1};
-}}}}'''.format(font_name.lower(), font_name) for font_name in font_names])
+}}}}'''.format(font_name.lower(), font_name) for font_name in FONT_NAMES])
 
     response_body = '''<!doctype html>
 <html lang="en">
