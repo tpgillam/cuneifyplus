@@ -8,6 +8,7 @@ from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood,
                                cuneify_line)
 
 
+FONTS_PATH_NAME = 'fonts'
 MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 
 
@@ -39,7 +40,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
                 except TransliterationNotUnderstood:
                     body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
-    except Exception as exc:
+    except Exception:
         # TODO remove generic exception catching
         # nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
@@ -51,12 +52,37 @@ def _get_cuneify_body(environ, transliteration, show_transliteration):
     return body
 
 
+def construct_font_response(path_info):
+    ''' Given a requested path, construct a response with the data from the requested font file '''
+    font_directory = os.path.append(environ['OPENSHIFT_DATA_DIR'], 'fonts') 
+
+    font_path = os.path.normpath(path_info.replace(FONTS_PATH_NAME, font_directory))
+
+    if not font_path.startswith(font_directory):
+        raise RuntimeError("Requesting font that is not in fonts directory")
+
+    # The response body is just what we get from reading the font.
+    # TODO we could cache this in memory if reading the font is slow
+    with open(font_path, 'rb') as f:
+        response_body = f.read()
+     
+    status = '200 OK'
+    # TODO if returning font other than ttf, use appropriate MIME type
+    ctype = 'application/x-font-ttf'
+    response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
+    start_response(status, response_headers)
+    return [response_body]
+
+
 def application(environ, start_response):
     ''' Entry point for the application '''
     # Use the appropriate behaviour here
     path_info = environ['PATH_INFO']
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
-    if path_info == '/cuneify':
+    if path_info.startswith('/' + FONTS_PATH_NAME):
+        # Return the static font file
+        return construct_font_response(path_info)
+    elif path_info == '/cuneify':
         transliteration = form.getvalue('input')
         if transliteration is None:
             # There is no transliteration, so show the input form again
