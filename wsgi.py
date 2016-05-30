@@ -94,20 +94,20 @@ def application(environ, start_response):
     else:
         body =  _get_input_form()
 
+    # All the CSS representing font classes
+    font_names = ['Assurbanipal', 'CuneiformNA', 'CuneiformOB', 'Santakku', 'SantakkuM', 'UllikummiA', 'UllikummiB', 'UllikummiC']
+    font_info = '\n'.join(['''@font-face {{{{
+    font-family: {1};
+    src: url(fonts/{1}.ttf);
+}}}}
+.{0} {{{{
+    font-family: {1};
+}}}}'''.format(font_name.lower(), font_name) for font_name in font_names])
+
     response_body = '''<!doctype html>
 <html lang="en">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<style>
-@font-face {{
-    font-family: Assurbanipal;
-    src: url(fonts/Assurbanipal.ttf);
-}}
-
-.assurbanipal {{
-    font-family: Assurbanipal;
-}}
-
-</style>
+<style>''' + font_info + '''</style>
 </head>
 <body>
 {}
