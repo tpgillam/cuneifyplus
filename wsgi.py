@@ -35,8 +35,8 @@ def _get_input_form(initial='Enter transliteration here...'):
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <select name="font_name">{}</select>
-    <input type="submit" value="Cuneify">
-    <input type="submit" value="Symbol list">
+    <input type="submit" name="action" value="Cuneify">
+    <input type="submit" name="action" value="Symbol list">
     </form>'''.format(MY_URL, font_name_selection)
     # TODO Use 'initial' when it can be made to disappear on entry into widget
     return body
@@ -114,9 +114,9 @@ def application(environ, start_response):
         return construct_font_response(environ, start_response, path_info)
     elif path_info == '/cuneify':
         # The type of form submission we make determines what we do now
-        submit_value = form.getvalue('submit')
-        print(submit_value)
-        if submit_value == 'Cuneify':
+        action_value = form.getvalue('action')
+        print(action_value)
+        if action_value == 'Cuneify':
             # We do a transliteration and show the output
             transliteration = form.getvalue('input')
             if transliteration is None:
@@ -127,9 +127,11 @@ def application(environ, start_response):
                 show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
                 font_name = form.getvalue('font_name')
                 body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
-        elif submit_value == 'Symbol list':
+        elif action_value == 'Symbol list':
             # Make a symbol list!
             body = 'This is a pretty symbol list!'
+        else:
+            raise RuntimeError("Unrecognised action value {}".format(action_value))
     else:
         body =  _get_input_form()
 
