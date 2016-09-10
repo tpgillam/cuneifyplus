@@ -13,10 +13,6 @@ class NotAToken(Exception):
     ''' We expected a single token, not multiple tokens '''
 
 
-class TransliterationNotUnderstood(Exception):
-    ''' The website didn't understand the transliteration '''
-
-
 class UnrecognisedSymbol(Exception):
     ''' Indicate that the transliteration wasn't entirely converted to cuneiform '''
 
@@ -117,8 +113,10 @@ def get_cuneiform(transliteration):
             raise UnrecognisedSymbol(transliteration)
         result = match.group(1)
         if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
-            raise TransliterationNotUnderstood
+            print("Transliteration {} not understood".format(transliteration))
+            raise UnrecognisedSymbol(transliteration)
         if contains_ascii(result):
+            print("Transliteration {} has result {}, which contains ascii".format(transliteration, result))
             raise UnrecognisedSymbol(transliteration)
         return result
 
@@ -241,9 +239,9 @@ def ordered_symbol_to_transliterations(cache, transliteration):
     '''
     result = OrderedDict()
 
-    transliteration = transliteration.strip()
-    # Split using alphanumeric characters (\w)
-    tokens = re.split(TOKEN_REGEX, transliteration)
+    # Concatenate symbols over multiple lines of transliteration
+    tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip())) for transliteration_line in transliteration.split()), 
+                 [])
     for token in tokens:
         cuneiform_symbol = cache.get_cuneiform(token)
         if cuneiform_symbol not in result:
