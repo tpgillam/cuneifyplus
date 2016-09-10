@@ -51,27 +51,21 @@ def _cache_file_path(environ):
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
     ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
     body = ''
-    try:
-        with FileCuneiformCache(cache_file_path=_cache_file_path(environ)) as cache:
-            for line in transliteration.split('\n'):
-                # Make empty lines appear as breaks in the output
-                line = line.strip()
-                if line == '':
-                    body += '<br />'
-                    continue
+    with FileCuneiformCache(cache_file_path=_cache_file_path(environ)) as cache:
+        for line in transliteration.split('\n'):
+            # Make empty lines appear as breaks in the output
+            line = line.strip()
+            if line == '':
+                body += '<br />'
+                continue
 
-                try:
-                    body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
-                    # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
-                except UnrecognisedSymbol as exception:
-                    body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
-                except TransliterationNotUnderstood:
-                    body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
-
-    except Exception:
-        # TODO remove generic exception catching
-        # nice formatting of error to be useful to the user
-        body += format_exc().replace('\n', '<br />')
+            try:
+                body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+                # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+            except UnrecognisedSymbol as exception:
+                body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
+            except TransliterationNotUnderstood:
+                body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
     # TODO will need javascript to re-populate the text area, I believe
     # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
@@ -88,11 +82,12 @@ def _get_symbol_list_body(environ, transliteration, font_name):
             for cuneiform_symbol, transliterations in ordered_symbol_to_transliterations(cache, transliteration).iteritems():
                 line = '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
                 body += line
-        except Exception:
+        except (UnrecognisedSymbol, TransliterationNotUnderstood):
             # In the event of an exception, show the normal cuneification,
             # including the transliteration
             body += 'There was an error - see below<br /><br />'
             body += _get_cuneify_body(environ, transliteration, True, font_name)
+            return body
 
     # TODO will need javascript to re-populate the text area, I believe
     # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
