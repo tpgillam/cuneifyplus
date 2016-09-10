@@ -249,7 +249,10 @@ def ordered_symbol_to_transliterations(cache, transliteration):
         cuneiform_symbol = cache.get_cuneiform(token)
         if cuneiform_symbol not in result:
             result[cuneiform_symbol] = []
-        result[cuneiform_symbol].append(token)
+
+        # Only show each token once!
+        if token not in result[cuneiform_symbol]:
+            result[cuneiform_symbol].append(token)
     return result
 
 
