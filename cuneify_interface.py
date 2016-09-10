@@ -13,6 +13,10 @@ class NotAToken(Exception):
     ''' We expected a single token, not multiple tokens '''
 
 
+class TransliterationNotUnderstood(Exception):
+    ''' The website didn't understand the transliteration '''
+
+
 class UnrecognisedSymbol(Exception):
     ''' Indicate that the transliteration wasn't entirely converted to cuneiform '''
 
@@ -114,9 +118,8 @@ def get_cuneiform(transliteration):
         result = match.group(1)
         if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
             print("Transliteration {} not understood".format(transliteration))
-            raise UnrecognisedSymbol(transliteration)
+            raise TransliterationNotUnderstood
         if contains_ascii(result):
-            print("Transliteration {} has result {}, which contains ascii".format(transliteration, result))
             raise UnrecognisedSymbol(transliteration)
         return result
 
