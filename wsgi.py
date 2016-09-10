@@ -79,7 +79,7 @@ def _get_symbol_list_body(environ, transliteration, font_name):
     body = ''
     with FileCuneiformCache(cache_file_path=_cache_file_path(environ)) as cache:
         try:
-            for cuneiform_symbol, transliterations in ordered_symbol_to_transliterations(cache, transliteration).iteritems():
+            for cuneiform_symbol, transliterations in ordered_symbol_to_transliterations(cache, transliteration).items():
                 line = '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
                 body += line
         except (UnrecognisedSymbol, TransliterationNotUnderstood):
