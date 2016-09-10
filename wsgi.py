@@ -140,7 +140,7 @@ def application(environ, start_response):
 
         # Whatever else happens, we always need a non-empty transliteration
         transliteration = form.getvalue('input')
-        if transliteration is None or transliteratio == '':
+        if transliteration is None or transliteration == '':
             # There is no transliteration, so show the input form again
             body = _get_input_form()
 
