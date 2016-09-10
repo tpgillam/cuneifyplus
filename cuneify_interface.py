@@ -12,8 +12,9 @@ from urllib.request import urlopen
 class NotAToken(Exception):
     ''' We expected a single token, not multiple tokens '''
 
+
 class NoCuneiformMatch(Exception):
-    ''' No cuneifiorm section could be found '''
+    ''' No cuneifiorm symbol could be found '''
 
 
 class TransliterationNotUnderstood(Exception):
@@ -116,7 +117,7 @@ def get_cuneiform(transliteration):
         html = response.read()
         match = re.search(b'"output cuneiform">(.*)</p>', html)
         if match is None:
-            raise NoCuneiformMatch
+            raise NoCuneiformMatch("No cuneiform found in result: {}".format(html))
         result = match.group(1)
         if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
             raise TransliterationNotUnderstood
