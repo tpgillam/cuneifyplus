@@ -6,7 +6,7 @@ from traceback import format_exc
 from urllib.parse import quote
 
 from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
-                               cuneify_line)
+                               cuneify_line, ordered_symbol_to_transliterations)
 
 
 # A mapping from font name to description
@@ -42,14 +42,17 @@ def _get_input_form(initial='Enter transliteration here...'):
     return body
 
 
+def _cache_file_path():
+    ''' Return the standard cuneiform cache file path '''
+    # We use a cache in the data directory. This isn't touched by the deployment process
+    return os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
+
+
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
     ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
-    # We use a cache in the data directory. This isn't touched by the deployment process
-    cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
-
     body = ''
     try:
-        with FileCuneiformCache(cache_file_path=cache_file_path) as cache:
+        with FileCuneiformCache(cache_file_path=_cache_file_path()) as cache:
             for line in transliteration.split('\n'):
                 # Make empty lines appear as breaks in the output
                 line = line.strip()
@@ -69,6 +72,27 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
         # TODO remove generic exception catching
         # nice formatting of error to be useful to the user
         body += format_exc().replace('\n', '<br />')
+
+    # TODO will need javascript to re-populate the text area, I believe
+    # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
+    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
+    # TODO this can probably be neatened up a little bit
+    return body
+
+
+def _get_symbol_list_body(environ, transliteration, font_name):
+    ''' Return the HTML body for the symbol list page '''
+    body = ''
+    with FileCuneiformCache(cache_file_path=_cache_file_path()) as cache:
+        try:
+            for cuneiform_symbol, transliterations in ordered_symbol_to_transliterations(cache, transliteration).iteritems():
+                line = '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
+                body += line
+        except Exception:
+            # In the event of an exception, show the normal cuneification,
+            # including the transliteration
+            body += 'There was an error - see below<br /><br />'
+            body += _get_cuneify_body(environ, transliteration, True, font_name)
 
     # TODO will need javascript to re-populate the text area, I believe
     # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
@@ -113,23 +137,26 @@ def application(environ, start_response):
         # Return the static font file
         return construct_font_response(environ, start_response, path_info)
     elif path_info == '/cuneify':
-        # The type of form submission we make determines what we do now
+
+        # Whatever else happens, we always need a non-empty transliteration
+        transliteration = form.getvalue('input')
+        if transliteration is None or transliteratio == '':
+            # There is no transliteration, so show the input form again
+            body = _get_input_form()
+
+        # Get the values of the other form inputs
+        show_transliteration_value = form.getvalue('show_transliteration')
+        show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
+        font_name = form.getvalue('font_name')
         action_value = form.getvalue('action')
-        print(action_value)
+
+        # The type of form submission we make determines what we do now
         if action_value == 'Cuneify':
             # We do a transliteration and show the output
-            transliteration = form.getvalue('input')
-            if transliteration is None:
-                # There is no transliteration, so show the input form again
-                body = _get_input_form()
-            else:
-                show_transliteration_value = form.getvalue('show_transliteration')
-                show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
-                font_name = form.getvalue('font_name')
-                body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
+            body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
         elif action_value == 'Symbol list':
             # Make a symbol list!
-            body = 'This is a pretty symbol list!'
+            body = _get_symbol_list_body(environ, transliteration, font_name)
         else:
             raise RuntimeError("Unrecognised action value {}".format(action_value))
     else:

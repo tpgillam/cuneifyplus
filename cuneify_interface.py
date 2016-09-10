@@ -4,6 +4,7 @@ import re
 
 from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
+from collections import OrderedDict
 from urllib.parse import quote, urlencode
 from urllib.request import urlopen
 
@@ -234,6 +235,23 @@ def cuneify_file(cache, file_name, show_transliteration):
             if show_transliteration:
                 output += '\n'
     return output
+
+
+def ordered_symbol_to_transliterations(cache, transliteration):
+    ''' Given a transliteration, which might be a multi-line input, grab all tokens and build up a symbol list. 
+        This will be an OrderedDict mapping symbol to transliteration tokens, in the order of appearance
+    '''
+    result = OrderedDict()
+
+    transliteration = transliteration.strip()
+    # Split using alphanumeric characters (\w)
+    tokens = re.split(TOKEN_REGEX, transliteration)
+    for token in tokens:
+        cuneiform_symbol = cache.get_cuneiform(token)
+        if cuneiform_symbol not in result:
+            result[cuneiform_symbol] = []
+        result[cuneiform_symbol].append(token)
+    return result
 
 
 def main():
