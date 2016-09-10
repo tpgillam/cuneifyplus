@@ -13,10 +13,6 @@ class NotAToken(Exception):
     ''' We expected a single token, not multiple tokens '''
 
 
-class NoCuneiformMatch(Exception):
-    ''' No cuneifiorm symbol could be found '''
-
-
 class TransliterationNotUnderstood(Exception):
     ''' The website didn't understand the transliteration '''
 
@@ -117,7 +113,8 @@ def get_cuneiform(transliteration):
         html = response.read()
         match = re.search(b'"output cuneiform">(.*)</p>', html)
         if match is None:
-            raise NoCuneiformMatch("No cuneiform found in result: {}".format(html))
+            print("No cuneiform found for transliteration {} in result: {}".format(transliteration, html))
+            raise UnrecognisedSymbol(transliteration)
         result = match.group(1)
         if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
             raise TransliterationNotUnderstood
