@@ -254,6 +254,7 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
         except (UnrecognisedSymbol, TransliterationNotUnderstood):
             if return_unrecognised and token not in unrecognised:
                 unrecognised.append(token)
+                continue
             else:
                 raise
         if cuneiform_symbol not in result:
