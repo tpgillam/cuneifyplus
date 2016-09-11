@@ -36,7 +36,7 @@ def _get_input_form(initial='Enter transliteration here...'):
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <select name="font_name">{}</select>
     <input type="submit" name="action" value="Cuneify">
-    <input type="submit" name="action" value="Symbol list">
+    <input type="submit" name="action" value="Create sign list">
     </form>'''.format(MY_URL, font_name_selection)
     # TODO Use 'initial' when it can be made to disappear on entry into widget
     return body
@@ -78,16 +78,14 @@ def _get_symbol_list_body(environ, transliteration, font_name):
     ''' Return the HTML body for the symbol list page '''
     body = ''
     with FileCuneiformCache(cache_file_path=_cache_file_path(environ)) as cache:
-        try:
-            for cuneiform_symbol, transliterations in ordered_symbol_to_transliterations(cache, transliteration).items():
-                line = '<span class="{}">{}</span>: {}<br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
-                body += line
-        except (UnrecognisedSymbol, TransliterationNotUnderstood):
-            # In the event of an exception, show the normal cuneification,
-            # including the transliteration
-            body += 'There was an error - see below<br /><br />'
-            body += _get_cuneify_body(environ, transliteration, True, font_name)
-            return body
+        symbol_to_transliterations, unrecognised_tokens = ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=True)
+        for cuneiform_symbol, transliterations in symbol_to_transliterations.items():
+            line = '<span class="{}">{}</span>: {}<br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
+            body += line
+
+        if len(unrecognised_tokens) > 0:
+            # Print out unrecognised tokens if there are any
+            body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(', '.join(unrecognised_tokens))
 
     # TODO will need javascript to re-populate the text area, I believe
     # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
@@ -149,7 +147,7 @@ def application(environ, start_response):
         if action_value == 'Cuneify':
             # We do a transliteration and show the output
             body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
-        elif action_value == 'Symbol list':
+        elif action_value == 'Create sign list':
             # Make a symbol list!
             body = _get_symbol_list_body(environ, transliteration, font_name)
         else:

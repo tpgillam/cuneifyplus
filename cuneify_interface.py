@@ -236,24 +236,38 @@ def cuneify_file(cache, file_name, show_transliteration):
     return output
 
 
-def ordered_symbol_to_transliterations(cache, transliteration):
+def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=False):
     ''' Given a transliteration, which might be a multi-line input, grab all tokens and build up a symbol list. 
         This will be an OrderedDict mapping symbol to transliteration tokens, in the order of appearance
+
+        If return_unrecognised is set to True, additionally return a list of symbols that aren't recognised.
     '''
     result = OrderedDict()
+    unrecognised = []
 
     # Concatenate symbols over multiple lines of transliteration
     tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip())) for transliteration_line in transliteration.split()), 
                  [])
     for token in tokens:
-        cuneiform_symbol = cache.get_cuneiform(token)
+        try:
+            cuneiform_symbol = cache.get_cuneiform(token)
+        except (UnrecognisedSymbol, TransliterationNotUnderstood):
+            if return_unrecognised and token not in unrecognised:
+                unrecognised.append(token)
+            else:
+                raise
         if cuneiform_symbol not in result:
             result[cuneiform_symbol] = []
 
         # Only show each token once!
         if token not in result[cuneiform_symbol]:
             result[cuneiform_symbol].append(token)
-    return result
+
+    # Return the appropriate things
+    if return_unrecognised:
+        return result, unrecognised
+    else:
+        return result
 
 
 def main():
