@@ -68,8 +68,8 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
                 body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
     # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
+    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
+    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
@@ -88,8 +88,8 @@ def _get_symbol_list_body(environ, transliteration, font_name):
             body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(', '.join(unrecognised_tokens))
 
     # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a>'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a>'.format(MY_URL)
+    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
+    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
