@@ -174,6 +174,7 @@ def application(environ, start_response):
 <body>
 {}
 <br />
+<hr>
 <br />
 Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.  
 However, if you wish to copy-and-paste (e.g. into a Word document), you may need to install the fonts in order for the
