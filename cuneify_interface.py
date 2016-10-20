@@ -1,3 +1,4 @@
+import itertools
 import os
 import pickle
 import re
@@ -169,8 +170,18 @@ class CuneiformCacheBase:
             self.transliteration_to_cuneiform[transliteration] = _get_cuneiform(transliteration)
         return self.transliteration_to_cuneiform[transliteration]
 
-    def get_cuneiform(self, transliteration):
-        ''' Get the UTF-8 string corresponding to the cuneiform that we want '''
+    def get_stripped_transliteration(self, transliteration):
+        ''' Return the basic transliteration symbol, without extra characters like [, !, ? etc. '''
+        result = transliteration
+        for char in itertools.chain(self._characters_to_strip_and_place_at_start, self._characters_to_strip_and_place_at_end):
+            result = result.replace(char, '')
+        return result
+
+    def get_cuneiform(self, transliteration, include_extra_chars=True):
+        ''' Get the UTF-8 string corresponding to the cuneiform that we want.
+            If include_extra_chars is set to False, then characters like [, !, and ? will not be included in the symbols returned,
+            even though in normal usage they would be included.
+        '''
         # First ascertain whether it is a spcecial case, in which case don't do
         # anything
         if transliteration in self._unmodified_sybols:
@@ -190,6 +201,8 @@ class CuneiformCacheBase:
                 stripped_transliteration += char
 
         cuneiform = self._get_cuneiform_bytes(stripped_transliteration).decode('utf-8')
+        if not include_extra_chars:
+            return cuneiform
         return start + cuneiform + end
 
 
@@ -287,6 +300,9 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
     tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip())) for transliteration_line in transliteration.split()), 
                  [])
     for token in tokens:
+        # Remove special characters that we don't need for a sign list
+        token = cache.get_stripped_transliteration(token)
+
         try:
             cuneiform_symbol = cache.get_cuneiform(token)
         except (UnrecognisedSymbol, TransliterationNotUnderstood):

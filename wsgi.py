@@ -178,19 +178,20 @@ def application(environ, start_response):
 Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.  
 However, if you wish to copy-and-paste (e.g. into a Word document), you may need to install the fonts in order for the
 characters to display correctly.  To install the fonts, follow the links below:
-
-    Santakku — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Old Babylonian Fonts”)
-    CuneiformOB — <a href="http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html">http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html</a>
-    SantakkuM — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Old Babylonian Fonts”)
-    UllikummiA — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”)
-    UllikummiB — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”)
-    UllikummiC — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”)
-    Assurbanipal — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Neo-Assyrian Font”)
-    CuneformNA — <a href="http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html">http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html</a>
+<br />
+<br />
+    Santakku — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Old Babylonian Fonts”) <br />
+    CuneiformOB — <a href="http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html">http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html</a> <br />
+    SantakkuM — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Old Babylonian Fonts”) <br />
+    UllikummiA — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”) <br />
+    UllikummiB — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”) <br />
+    UllikummiC — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Hittite Fonts”) <br />
+    Assurbanipal — <a href="http://www.hethport.uni-wuerzburg.de/cuneifont/">http://www.hethport.uni-wuerzburg.de/cuneifont/</a> (click on “Neo-Assyrian Font”) <br />
+    CuneformNA — <a href="http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html">http://oracc.museum.upenn.edu/doc/help/visitingoracc/fonts/index.html</a> <br />
 <br />
 <br />
 Powered by <a href="http://oracc.museum.upenn.edu/saao/knpp/cuneiformrevealed/cuneify/">Cuneify</a>,
-by Steve Tinney.
+by Steve Tinney. Created by Tom Gillam, 2016.
 </body></html>'''
 
 
