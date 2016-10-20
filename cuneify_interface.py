@@ -103,7 +103,7 @@ def _remove_abbreviations(transliteration):
     return transliteration
 
 
-def get_cuneiform(transliteration):
+def _get_cuneiform(transliteration):
     ''' Get the UTF-8 encoded cuneiform for the given transliteration string '''
     # Debugging
     # print('Looking up: "{}"'.format(transliteration))
@@ -133,12 +133,16 @@ def get_cuneiform(transliteration):
 
 class CuneiformCacheBase:
     ''' Abstract class representing a cuneiform class. It is a context manager, where the cache will be loaded 
-        on entry and updated at exit 
+        on entry and updated at exit.
+
+        The public API is the get_cuneiform() method, which is given one transliteration token.
     '''
 
     __metaclass__ = ABCMeta
 
     def __init__(self):
+        # These are symbols that we don't attempt to transliterate
+        self._unmodified_sybols = ('x', 'X', '?', '!', '[', ']')
         self.transliteration_to_cuneiform = {}
 
     @abstractmethod
@@ -151,15 +155,19 @@ class CuneiformCacheBase:
             values if present 
         '''
 
-    def get_cuneiform_bytes(self, transliteration):
+    def _get_cuneiform_bytes(self, transliteration):
         ''' Get the cuneiform bytes array corresponding to the given transliteration, using the cache if available.'''
         if transliteration not in self.transliteration_to_cuneiform:
-            self.transliteration_to_cuneiform[transliteration] = get_cuneiform(transliteration)
+            self.transliteration_to_cuneiform[transliteration] = _get_cuneiform(transliteration)
         return self.transliteration_to_cuneiform[transliteration]
 
     def get_cuneiform(self, transliteration):
         ''' Get the UTF-8 string corresponding to the cuneiform that we want '''
-        return self.get_cuneiform_bytes(transliteration).decode('utf-8')
+        # First ascertain whether it is a spcecial case, in which case don't do
+        # anything
+        if transliteration in self._unmodified_sybols:
+            return transliteration
+        return self._get_cuneiform_bytes(transliteration).decode('utf-8')
 
 
 class FileCuneiformCache(CuneiformCacheBase):
