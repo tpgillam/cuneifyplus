@@ -38,7 +38,7 @@ REPLACEMENT_MAP = {'š': 'sz',
                    'ṭ': 't,',
                    'ĝ': 'j',
                    'ḫ': 'h',
-                   'ʾ': "'",
+
                    # Subscripted numbers correspond to actual numbers in the original
                    '₀': '0',   
                    '₁': '1',   
@@ -50,6 +50,13 @@ REPLACEMENT_MAP = {'š': 'sz',
                    '₇': '7',
                    '₈': '8',
                    '₉': '9',
+                   
+                   # Replace 'smart' quotes with normal characters
+                   '‘': "'",
+                   '’': "'",
+                   'ʾ': "'",
+                   '“': '"',
+                   '”': '"',
                    }
 ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
 GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
