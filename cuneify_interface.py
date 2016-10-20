@@ -143,6 +143,14 @@ class CuneiformCacheBase:
     def __init__(self):
         # These are symbols that we don't attempt to transliterate
         self._unmodified_sybols = ('x', 'X', '?', '!', '[', ']')
+
+        # These are symbols which, if found within a token, are stripped and
+        # placed to the end, whilst the remainder is cunefied as normal. Similar
+        # logic applies to those that would be placed at the start
+        self._characters_to_strip_and_place_at_start = ('[')
+        self._characters_to_strip_and_place_at_end = ('!', '?', ']')
+
+        # Runtime storage for the cache
         self.transliteration_to_cuneiform = {}
 
     @abstractmethod
@@ -167,7 +175,22 @@ class CuneiformCacheBase:
         # anything
         if transliteration in self._unmodified_sybols:
             return transliteration
-        return self._get_cuneiform_bytes(transliteration).decode('utf-8')
+
+        # Create buffers of characters that should go to the start / end, and
+        # strip them from the transliteration
+        start = ''
+        end = ''
+        stripped_transliteration = ''
+        for char in transliteration:
+            if char in self._characters_to_strip_and_place_at_start:
+                start += char
+            elif char in self._characters_to_strip_and_place_at_end:
+                end += char
+            else:
+                stripped_transliteration += char
+
+        cuneiform = self._get_cuneiform_bytes(stripped_transliteration).decode('utf-8')
+        return start + cuneiform + end
 
 
 class FileCuneiformCache(CuneiformCacheBase):
