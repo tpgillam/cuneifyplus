@@ -142,9 +142,6 @@ class CuneiformCacheBase:
     __metaclass__ = ABCMeta
 
     def __init__(self):
-        # These are symbols that we don't attempt to transliterate
-        self._unmodified_sybols = ('x', 'X', '?', '!', '[', ']')
-
         # These are symbols which, if found within a token, are stripped and
         # placed to the end, whilst the remainder is cunefied as normal. Similar
         # logic applies to those that would be placed at the start
@@ -177,6 +174,21 @@ class CuneiformCacheBase:
             result = result.replace(char, '')
         return result
 
+    def _should_pass_through(self, transliteration):
+        ''' Return True iff no attempt to cuneify this string should be made '''
+        # Strings of x or X should be ignored - they represent unreadable symbols
+        lower_case_characters = set(transliteration.lower())
+        if lower_case_characters == {'x'}:
+            return True
+
+        # Special characters that are left as-is
+        unmodified_sybols = ('?', '!', '[', ']')
+        if transliteration in unmodified_sybols:
+            return True
+
+        # Cuneify!
+        return False
+
     def get_cuneiform(self, transliteration, include_extra_chars=True):
         ''' Get the UTF-8 string corresponding to the cuneiform that we want.
             If include_extra_chars is set to False, then characters like [, !, and ? will not be included in the symbols returned,
@@ -184,7 +196,7 @@ class CuneiformCacheBase:
         '''
         # First ascertain whether it is a spcecial case, in which case don't do
         # anything
-        if transliteration in self._unmodified_sybols:
+        if self._should_pass_through(transliteration):
             return transliteration
 
         # Create buffers of characters that should go to the start / end, and
