@@ -58,6 +58,9 @@ REPLACEMENT_MAP = {'š': 'sz',
                    'ʾ': "'",
                    '“': '"',
                    '”': '"',
+
+                   # Replace em-dash with normal dash
+                   '–': '-',
                    }
 ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
 GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
