@@ -224,8 +224,9 @@ class CuneiformCacheBase:
 class FileCuneiformCache(CuneiformCacheBase):
     ''' Store the cuneiform cache in a pickle file '''
 
-    def __init__(self, cache_file_path):
+    def __init__(self, cache_file_path, read_only=False):
         self._cache_file_path = cache_file_path
+        self._read_only = read_only
         super().__init__()
 
     def __enter__(self):
@@ -250,6 +251,9 @@ class FileCuneiformCache(CuneiformCacheBase):
 
     def _write_cache_file(self):
         ''' Worker method to write the cache file to disk '''
+        if self._read_only:
+            # We cannot update the cache file, since we're in read-only mode
+            return
         with open(self._cache_file_path, 'wb') as cache_file:
             pickle.dump(self.transliteration_to_cuneiform, cache_file)
 

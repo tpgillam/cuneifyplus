@@ -11,9 +11,11 @@ if 'mws' in socket.gethostname().lower():
     def get_font_directory(environ):
         return os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'fonts')
 
-    def cache_file_path(environ):
-        ''' Return the standard cuneiform cache file path '''
-        return os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
+    def get_cache(environ):
+        ''' Return the standard cuneiform cache '''
+        # TODO FIXME - write MySQL cache
+        cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
+        return FileCuneiformCache(cache_file_path=cache_file_path(environ), read_only=True)
 
 
 else:
@@ -23,7 +25,9 @@ else:
     def get_font_directory(environ):
         return os.path.join(environ['OPENSHIFT_DATA_DIR'], 'fonts') 
 
-    def cache_file_path(environ):
-        ''' Return the standard cuneiform cache file path '''
+    def get_cache(environ):
+        ''' Return the standard cuneiform cache '''
         # We use a cache in the data directory. This isn't touched by the deployment process
-        return os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
+        cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
+        return FileCuneiformCache(cache_file_path=cache_file_path(environ))
+

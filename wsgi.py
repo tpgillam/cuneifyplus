@@ -11,7 +11,7 @@ from urllib.parse import quote
 
 from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
                                cuneify_line, ordered_symbol_to_transliterations)
-from environment import MY_URL, cache_file_path, get_font_directory
+from environment import MY_URL, get_cache, get_font_directory
 
 
 # A mapping from font name to description
@@ -49,7 +49,7 @@ def _get_input_form(initial='Enter transliteration here...'):
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
     ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
     body = ''
-    with FileCuneiformCache(cache_file_path=cache_file_path(environ)) as cache:
+    with get_cache(environ) as cache:
         for line in transliteration.split('\n'):
             # Make empty lines appear as breaks in the output
             line = line.strip()
@@ -75,7 +75,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
 def _get_symbol_list_body(environ, transliteration, font_name):
     ''' Return the HTML body for the symbol list page '''
     body = ''
-    with FileCuneiformCache(cache_file_path=cache_file_path(environ)) as cache:
+    with get_cache(environ) as cache:
         symbol_to_transliterations, unrecognised_tokens = ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=True)
         for cuneiform_symbol, transliterations in symbol_to_transliterations.items():
             line = '<span class="{}">{}</span>: {}<br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
