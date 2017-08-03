@@ -1,12 +1,15 @@
 ''' Environment-specific commands '''
 
+import os
 import socket
+
+
 if 'mws' in socket.gethostname().lower():
     # Running in MWS
     MY_URL = 'http://cuneifyplus.arch.cam.ac.uk'
 
     def get_font_directory(environ):
-        return os.path.join(environ['DOCUMENT_ROOT'], 'fonts')
+        return os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'fonts')
 
     def cache_file_path(environ):
         ''' Return the standard cuneiform cache file path '''
