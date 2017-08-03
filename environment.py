@@ -20,10 +20,10 @@ if 'mws' in socket.gethostname().lower():
         # password: puffin
         # dbname: cuneify
         # table: lookup   - (id, stuff). Latter is a BLOB type. Idea is that it will contain one row
-        return MySQLCuneiformCache('localhost', 'cuneify', 'puffin', 'cuneify')
+        # return MySQLCuneiformCache('localhost', 'cuneify', 'puffin', 'cuneify')
 
-        # cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
-        # return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
+        cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
+        return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
 
 
 else:
