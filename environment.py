@@ -6,11 +6,11 @@ if 'mws' in socket.gethostname().lower():
     MY_URL = 'http://cuneifyplus.arch.cam.ac.uk'
 
     def get_font_directory(environ):
-        raise RuntimeError(environ)
+        return os.path.join(environ['DOCUMENT_ROOT'], 'fonts')
 
     def cache_file_path(environ):
         ''' Return the standard cuneiform cache file path '''
-        raise RuntimeError(environ)
+        return os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneiform_cache.pickle'))
 
 
 else:
