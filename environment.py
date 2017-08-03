@@ -13,7 +13,7 @@ if 'mws' in socket.gethostname().lower():
 
     def cache_file_path(environ):
         ''' Return the standard cuneiform cache file path '''
-        return os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneiform_cache.pickle'))
+        return os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
 
 
 else:
