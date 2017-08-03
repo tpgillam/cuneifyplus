@@ -1,3 +1,7 @@
+# In order to work with the Cambridge University MWS server
+import sys
+sys.path.append('/var/www/default/docroot/cuneifyplus')
+
 import cgi
 import os
 
