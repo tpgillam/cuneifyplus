@@ -157,6 +157,8 @@ class CuneiformCacheBase:
     @abstractmethod
     def __enter__(self):
         ''' Get the current transliteration -> cuneiform map from storage '''
+        # This variable allows children to decide to not do writing, if they want.
+        self._cache_modified = False
 
     @abstractmethod
     def __exit__(self, type_, value, traceback):
@@ -168,6 +170,7 @@ class CuneiformCacheBase:
         ''' Get the cuneiform bytes array corresponding to the given transliteration, using the cache if available.'''
         if transliteration not in self.transliteration_to_cuneiform:
             self.transliteration_to_cuneiform[transliteration] = _get_cuneiform(transliteration)
+            self._cache_modified = True
         return self.transliteration_to_cuneiform[transliteration]
 
     def get_stripped_transliteration(self, transliteration):
@@ -225,11 +228,12 @@ class FileCuneiformCache(CuneiformCacheBase):
     ''' Store the cuneiform cache in a pickle file '''
 
     def __init__(self, cache_file_path, read_only=False):
+        super().__init__()
         self._cache_file_path = cache_file_path
         self._read_only = read_only
-        super().__init__()
 
     def __enter__(self):
+        super().__enter__()
         if os.path.isfile(self._cache_file_path):
             try:
                 self._load_cache_file()
@@ -241,7 +245,8 @@ class FileCuneiformCache(CuneiformCacheBase):
         return self
 
     def __exit__(self, type_, value, traceback):
-        self._write_cache_file()
+        if self._cache_modified:
+            self._write_cache_file()
 
     def _load_cache_file(self):
         ''' Worker method to load the cache file into the local variable '''
@@ -256,6 +261,56 @@ class FileCuneiformCache(CuneiformCacheBase):
             return
         with open(self._cache_file_path, 'wb') as cache_file:
             pickle.dump(self.transliteration_to_cuneiform, cache_file)
+
+
+class MySQLCuneiformCache(CuneiformCacheBase):
+    ''' Store the cuneiform cache in a mysql table '''
+
+    def __init__(self, host, user, password, dbname):
+        super().__init__()
+        self._host = host
+        self._user = user
+        self._password = password
+        self._dbname = dbname
+
+    def __enter__(self):
+        super().__enter__()
+
+        import MySQLdb
+        self._conection = MySQLdb.connect(host=self._host, user=self._user,
+                                          passwd=self._password, db=self._dbname)
+        cursor = self._connection.cursor()
+
+        cursor.execute('select * from lookup')
+        rows = cur.fetchall()
+
+        if len(rows) == 0:
+            # No data with which to update our cache
+            return
+
+        if len(rows) > 1:
+            raise RuntimeError("Expected at most 1 row, but got {}".format(len(rows)))
+
+        row = rows[0]
+        stored_cache = pickle.loads(row[1])
+        self.transliteration_to_cuneiform.update(stored_cache)
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        if not self._cache_modified:
+            return
+
+        new_value = pickle.dumps(self.transliteration_to_cuneiform)
+
+        cursor = self._connection.cursor()
+        # Clear existing row, if present
+        cursor.execute('DELETE FROM lookup')
+
+        # Insert the new data
+        cursor.execute('INSERT INTO lookup (stuff) VALUES (%s)', (new_value,))
+
+        self._connection.close()
+    
 
 
 def cuneify_line(cache, transliteration, show_transliteration):

@@ -3,7 +3,7 @@
 import os
 import socket
 
-from cuneify_interface import FileCuneiformCache
+from cuneify_interface import FileCuneiformCache, MySQLCuneiformCache
 
 
 if 'mws' in socket.gethostname().lower():
@@ -16,9 +16,14 @@ if 'mws' in socket.gethostname().lower():
 
     def get_cache(environ):
         ''' Return the standard cuneiform cache '''
-        # TODO FIXME - write MySQL cache, rather than using read-only file cache
-        cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
-        return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
+        # username: cuneify
+        # password: puffin
+        # dbname: cuneify
+        # table: lookup   - (id, stuff). Latter is a BLOB type. Idea is that it will contain one row
+        return MySQLCuneiformCache('localhost', 'cuneify', 'puffin', 'cuneify')
+
+        # cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
+        # return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
 
 
 else:
