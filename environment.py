@@ -3,9 +3,12 @@
 import os
 import socket
 
+from cuneify_interface import FileCuneiformCache
+
 
 if 'mws' in socket.gethostname().lower():
     # Running in MWS
+
     MY_URL = 'http://cuneifyplus.arch.cam.ac.uk'
 
     def get_font_directory(environ):
@@ -13,13 +16,14 @@ if 'mws' in socket.gethostname().lower():
 
     def get_cache(environ):
         ''' Return the standard cuneiform cache '''
-        # TODO FIXME - write MySQL cache
+        # TODO FIXME - write MySQL cache, rather than using read-only file cache
         cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'cuneiform_cache.pickle'))
         return FileCuneiformCache(cache_file_path=cache_file_path(environ), read_only=True)
 
 
 else:
     # Running on OpenShift
+
     MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
 
     def get_font_directory(environ):

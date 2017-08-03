@@ -9,8 +9,8 @@ from collections import OrderedDict
 from traceback import format_exc
 from urllib.parse import quote
 
-from cuneify_interface import (FileCuneiformCache, TransliterationNotUnderstood, UnrecognisedSymbol,
-                               cuneify_line, ordered_symbol_to_transliterations)
+from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, 
+        ordered_symbol_to_transliterations)
 from environment import MY_URL, get_cache, get_font_directory
 
 
