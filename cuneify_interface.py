@@ -24,7 +24,7 @@ class UnrecognisedSymbol(Exception):
     def __init__(self, transliteration, *args, **argv):
         self.transliteration = transliteration
         super().__init__(*args, **argv)
-        
+
     def __str__(self):
         return 'Unrecognised symbol in: {}'.format(self.transliteration)
 
@@ -34,24 +34,24 @@ TOKEN_SEPARATORS = ('-', ' ', '.')
 TOKEN_REGEX = '-| |\.'
 
 
-REPLACEMENT_MAP = {'š': 'sz', 
-                   'ṣ': 's,', 
+REPLACEMENT_MAP = {'š': 'sz',
+                   'ṣ': 's,',
                    'ṭ': 't,',
                    'ĝ': 'j',
                    'ḫ': 'h',
 
                    # Subscripted numbers correspond to actual numbers in the original
-                   '₀': '0',   
-                   '₁': '1',   
-                   '₂': '2',   
-                   '₃': '3',   
-                   '₄': '4',   
+                   '₀': '0',
+                   '₁': '1',
+                   '₂': '2',
+                   '₃': '3',
+                   '₄': '4',
                    '₅': '5',
                    '₆': '6',
                    '₇': '7',
                    '₈': '8',
                    '₉': '9',
-                   
+
                    # Replace 'smart' quotes with normal characters
                    '‘': "'",
                    '’': "'",
@@ -136,7 +136,7 @@ def _get_cuneiform(transliteration):
 
 
 class CuneiformCacheBase:
-    ''' Abstract class representing a cuneiform class. It is a context manager, where the cache will be loaded 
+    ''' Abstract class representing a cuneiform class. It is a context manager, where the cache will be loaded
         on entry and updated at exit.
 
         The public API is the get_cuneiform() method, which is given one transliteration token.
@@ -162,8 +162,8 @@ class CuneiformCacheBase:
 
     @abstractmethod
     def __exit__(self, type_, value, traceback):
-        ''' Update the cache with the current transliteration, cuneiform pairs. It will overwrite the given 
-            values if present 
+        ''' Update the cache with the current transliteration, cuneiform pairs. It will overwrite the given
+            values if present
         '''
 
     def _get_cuneiform_bytes(self, transliteration):
@@ -176,7 +176,8 @@ class CuneiformCacheBase:
     def get_stripped_transliteration(self, transliteration):
         ''' Return the basic transliteration symbol, without extra characters like [, !, ? etc. '''
         result = transliteration
-        for char in itertools.chain(self._characters_to_strip_and_place_at_start, self._characters_to_strip_and_place_at_end):
+        for char in itertools.chain(self._characters_to_strip_and_place_at_start,
+                                    self._characters_to_strip_and_place_at_end):
             result = result.replace(char, '')
         return result
 
@@ -197,8 +198,8 @@ class CuneiformCacheBase:
 
     def get_cuneiform(self, transliteration, include_extra_chars=True):
         ''' Get the UTF-8 string corresponding to the cuneiform that we want.
-            If include_extra_chars is set to False, then characters like [, !, and ? will not be included in the symbols returned,
-            even though in normal usage they would be included.
+            If include_extra_chars is set to False, then characters like [, !, and ? will not be included in the symbols
+            returned, though in normal usage they would be included.
         '''
         # First ascertain whether it is a spcecial case, in which case don't do
         # anything
@@ -310,12 +311,12 @@ class MySQLCuneiformCache(CuneiformCacheBase):
         cursor.execute('INSERT INTO lookup (stuff) VALUES (%s)', (new_value,))
 
         self._connection.close()
-    
+
 
 
 def cuneify_line(cache, transliteration, show_transliteration):
     ''' Take a line of transliteration and display the output, nicely formatted, on the terminal.
-        Should be used whilst in the context of cache. 
+        Should be used whilst in the context of cache.
     '''
     transliteration = transliteration.strip()
     # Split using alphanumeric characters (\w)
@@ -362,7 +363,7 @@ def cuneify_file(cache, file_name, show_transliteration):
 
 
 def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=False):
-    ''' Given a transliteration, which might be a multi-line input, grab all tokens and build up a symbol list. 
+    ''' Given a transliteration, which might be a multi-line input, grab all tokens and build up a symbol list.
         This will be an OrderedDict mapping symbol to transliteration tokens, in the order of appearance
 
         If return_unrecognised is set to True, additionally return a list of symbols that aren't recognised.
@@ -371,7 +372,8 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
     unrecognised = []
 
     # Concatenate symbols over multiple lines of transliteration
-    tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip())) for transliteration_line in transliteration.split()), 
+    tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip()))
+                 for transliteration_line in transliteration.split()), 
                  [])
     for token in tokens:
         # Remove special characters that we don't need for a sign list
@@ -414,4 +416,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
