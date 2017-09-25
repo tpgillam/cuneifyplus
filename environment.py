@@ -11,6 +11,9 @@ if 'mws' in socket.gethostname().lower():
 
     MY_URL = 'http://cuneifyplus.arch.cam.ac.uk'
 
+    # TODO Remove temporary workaround whilst migrating from OpenShift to Cambridge University server
+    DEPRECATED = False
+
     def get_font_directory(environ):
         return os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'fonts')
 
@@ -31,6 +34,8 @@ else:
     # Running on OpenShift
 
     MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
+
+    DEPRECATED = True
 
     def get_font_directory(environ):
         return os.path.join(environ['OPENSHIFT_DATA_DIR'], 'fonts')

@@ -11,7 +11,7 @@ from urllib.parse import quote
 
 from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, 
         ordered_symbol_to_transliterations)
-from environment import MY_URL, get_cache, get_font_directory
+from environment import DEPRECATED, MY_URL, get_cache, get_font_directory
 
 
 # A mapping from font name to description
@@ -152,6 +152,12 @@ def application(environ, start_response):
             raise RuntimeError("Unrecognised action value {}".format(action_value))
     else:
         body =  _get_input_form()
+
+    # TODO remove temporary workaround
+    if DEPRECATED:
+        body = '''<h1>This site is deprecated!</h1><br />
+Please update your bookmarks to <a href='http://cuneifyplus.arch.cam.ac.uk'>http://cuneifyplus.arch.cam.ac.uk</a>
+''' + body
 
     # All the CSS representing font classes
     font_info = '\n'.join(['''@font-face {{{{
