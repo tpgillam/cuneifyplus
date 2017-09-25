@@ -155,9 +155,9 @@ def application(environ, start_response):
 
     # TODO remove temporary workaround
     if DEPRECATED:
-        body = '''<h1>This site is deprecated!</h1><br />
+        body = '''<span style="color:red"><h1>This site is moving!</h1><br />
 Please update your bookmarks to <a href='http://cuneifyplus.arch.cam.ac.uk'>http://cuneifyplus.arch.cam.ac.uk</a>
-''' + body
+<br /><br /><br /><br /></span>''' + body
 
     # All the CSS representing font classes
     font_info = '\n'.join(['''@font-face {{{{
