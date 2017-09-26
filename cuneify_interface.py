@@ -6,7 +6,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
 from collections import OrderedDict
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 from urllib.request import urlopen
 
 
@@ -31,7 +31,7 @@ class UnrecognisedSymbol(Exception):
 
 # The separators between tokens. Store regex separately due to escaping of dot
 TOKEN_SEPARATORS = ('-', ' ', '.')
-TOKEN_REGEX = '-| |\.'
+TOKEN_REGEX = r'-| |\.'
 
 
 REPLACEMENT_MAP = {'š': 'sz',
@@ -59,8 +59,9 @@ REPLACEMENT_MAP = {'š': 'sz',
                    '“': '"',
                    '”': '"',
 
-                   # Replace em-dash with normal dash
+                   # Replace em-dash and en-dash with normal dash
                    '–': '-',
+                   '—': '-',
                    }
 ACUTE_VOWELS = {'á': 'a', 'é': 'e', 'í': 'i', 'ú': 'u'}
 GRAVE_VOWELS = {'à': 'a', 'è': 'e', 'ì': 'i', 'ù': 'u'}
@@ -73,6 +74,8 @@ GRAVE_VOWELS.update({key.upper(): value.upper() for key, value in GRAVE_VOWELS.i
 
 def contains_ascii(byte_array, ignore_space=True):
     ''' Returns true if any character in the given bytes object is an ascii character. '''
+    if not byte_array:
+        return False
     for character in byte_array:
         if ignore_space and character == 32:
             continue
@@ -154,11 +157,12 @@ class CuneiformCacheBase:
         # Runtime storage for the cache
         self.transliteration_to_cuneiform = {}
 
+        # This variable allows children to decide to not do writing, if they want.
+        self._cache_modified = False
+
     @abstractmethod
     def __enter__(self):
         ''' Get the current transliteration -> cuneiform map from storage '''
-        # This variable allows children to decide to not do writing, if they want.
-        self._cache_modified = False
 
     @abstractmethod
     def __exit__(self, type_, value, traceback):
@@ -262,6 +266,8 @@ class FileCuneiformCache(CuneiformCacheBase):
             return
         with open(self._cache_file_path, 'wb') as cache_file:
             pickle.dump(self.transliteration_to_cuneiform, cache_file)
+        # The cache is no longer modified
+        self._cache_modified = False
 
 
 class MySQLCuneiformCache(CuneiformCacheBase):
@@ -373,7 +379,7 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
 
     # Concatenate symbols over multiple lines of transliteration
     tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip()))
-                 for transliteration_line in transliteration.split()), 
+                 for transliteration_line in transliteration.split()),
                  [])
     for token in tokens:
         # Remove special characters that we don't need for a sign list
