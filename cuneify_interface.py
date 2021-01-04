@@ -6,8 +6,6 @@ import re
 from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
 from collections import OrderedDict
-from urllib.parse import quote
-from urllib.request import urlopen
 
 
 class NotAToken(Exception):
@@ -110,34 +108,6 @@ def _remove_abbreviations(transliteration):
     return transliteration
 
 
-def _get_cuneiform(transliteration):
-    ''' Get the UTF-8 encoded cuneiform for the given transliteration string '''
-    # Debugging
-    # print('Looking up: "{}"'.format(transliteration))
-    transliteration = _remove_abbreviations(transliteration)
-
-    url = 'http://oracc.museum.upenn.edu/cgi-bin/cuneify'
-    # TODO in python 3.5 we can use the quote_via argument to urlencode
-    # values = {'input': transliteration}
-    # data = urlencode(values, quote_via=quote)
-    # data = 'input={}'.format(quote(transliteration.encode('utf-8')))
-    data = 'input={}'.format(quote(transliteration))
-    url = '{}?{}'.format(url, data)
-    with urlopen(url) as response:
-        html = response.read()
-        match = re.search(b'"output cuneiform">(.*)</p>', html)
-        if match is None:
-            print("No cuneiform found for transliteration {} in result: {}".format(transliteration, html))
-            raise UnrecognisedSymbol(transliteration)
-        result = match.group(1)
-        if result.startswith(b"Sorry, I didn\'t understand your transliteration"):
-            print("Transliteration {} not understood".format(transliteration))
-            raise TransliterationNotUnderstood
-        if contains_ascii(result):
-            raise UnrecognisedSymbol(transliteration)
-        return result
-
-
 class CuneiformCacheBase:
     ''' Abstract class representing a cuneiform class. It is a context manager, where the cache will be loaded
         on entry and updated at exit.
@@ -171,10 +141,12 @@ class CuneiformCacheBase:
         '''
 
     def _get_cuneiform_bytes(self, transliteration):
-        ''' Get the cuneiform bytes array corresponding to the given transliteration, using the cache if available.'''
+        ''' Get the cuneiform bytes array corresponding to the given transliteration, using the cache if available. '''
+        if transliteration == '':
+            # The empty string corresponds to no cuneiform symbol!
+            return b''
         if transliteration not in self.transliteration_to_cuneiform:
-            self.transliteration_to_cuneiform[transliteration] = _get_cuneiform(transliteration)
-            self._cache_modified = True
+            raise UnrecognisedSymbol(transliteration)
         return self.transliteration_to_cuneiform[transliteration]
 
     def get_stripped_transliteration(self, transliteration):
