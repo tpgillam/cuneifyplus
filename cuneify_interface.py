@@ -344,10 +344,10 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
     ''' Given a transliteration, which might be a multi-line input, grab all tokens and build up a symbol list.
         This will be an OrderedDict mapping symbol to transliteration tokens, in the order of appearance
 
-        If return_unrecognised is set to True, additionally return a list of symbols that aren't recognised.
+        If return_unrecognised is set to True, additionally return a set of symbols that aren't recognised.
     '''
     result = OrderedDict()
-    unrecognised = []
+    unrecognised = set()
 
     # Concatenate symbols over multiple lines of transliteration
     tokens = sum((list(re.split(TOKEN_REGEX, transliteration_line.strip()))
@@ -360,8 +360,8 @@ def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognis
         try:
             cuneiform_symbol = cache.get_cuneiform(token)
         except (UnrecognisedSymbol, TransliterationNotUnderstood):
-            if return_unrecognised and token not in unrecognised:
-                unrecognised.append(token)
+            if return_unrecognised:
+                unrecognised.add(token)
                 continue
             else:
                 raise
@@ -385,11 +385,26 @@ def main():
     parser.add_argument('--show-transliteration', action='store_true',
                         help='By default just show cuneiform. If this is set, '
                              'also display original transliteration')
+    parser.add_argument('--symbol-list', action='store_true',
+        help='If this is set, show a mapping between the transliterated symbols and cuneiform.')
     parser.add_argument('--cache', help='Use specified cache file',
                         default='cuneiform_cache.pickle')
     args = parser.parse_args()
     with FileCuneiformCache(cache_file_path=args.cache) as cache:
-        print(cuneify_file(cache, args.input_file, args.show_transliteration))
+        if args.symbol_list:
+            with open(args.input_file) as input_file:
+                symbol_to_transliterations, unrecognised_tokens = ordered_symbol_to_transliterations(
+                    cache,
+                    input_file.read(),
+                    return_unrecognised=True)
+                print('Symbol map:')
+                for symbol, transliterations in symbol_to_transliterations.items():
+                    print(' {} :  {}'.format(symbol, transliterations))
+                print()
+                print('Unrecognised symbols:')
+                print(unrecognised_tokens)
+        else:
+            print(cuneify_file(cache, args.input_file, args.show_transliteration))
 
 
 if __name__ == '__main__':
