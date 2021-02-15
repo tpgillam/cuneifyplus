@@ -136,16 +136,17 @@ class CuneiformCacheBase:
 
     @abstractmethod
     def __enter__(self):
-        """ Get the current transliteration -> cuneiform map from storage """
+        """Get the current transliteration -> cuneiform map from storage."""
 
     @abstractmethod
     def __exit__(self, type_, value, traceback):
-        """ Update the cache with the current transliteration, cuneiform pairs. It will overwrite the given
-            values if present
+        """Update the cache with the current transliteration, cuneiform pairs. 
+        
+        It will overwrite the given values if present
         """
 
     def _get_cuneiform_bytes(self, transliteration):
-        """ Get the cuneiform bytes array corresponding to the given transliteration, using the cache if available. """
+        """Get the cuneiform bytes array corresponding to the given transliteration."""
         if transliteration == "":
             # The empty string corresponds to no cuneiform symbol!
             return b""
