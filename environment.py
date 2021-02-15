@@ -6,6 +6,7 @@ import socket
 from cuneify_interface import FileCuneiformCache, MySQLCuneiformCache
 
 
+
 if 'mws' in socket.gethostname().lower():
     # Running in MWS
 
@@ -30,7 +31,8 @@ if 'mws' in socket.gethostname().lower():
         return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
 
 
-else:
+elif 'openshift' in socket.gethostname().lower():
+
     # Running on OpenShift
 
     MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
@@ -44,4 +46,20 @@ else:
         ''' Return the standard cuneiform cache '''
         # We use a cache in the data directory. This isn't touched by the deployment process
         cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
+        return FileCuneiformCache(cache_file_path=cache_file_path)
+
+else:
+
+    # Running locally?
+    MY_URL = ''
+
+    DEPRECATED = False
+
+    def get_font_directory(environ):
+        return 'fonts'
+
+    def get_cache(environ):
+        ''' Return the standard cuneiform cache '''
+        # We use a cache in the data directory. This isn't touched by the deployment process
+        cache_file_path = 'cuneiform_cache.pickle'
         return FileCuneiformCache(cache_file_path=cache_file_path)

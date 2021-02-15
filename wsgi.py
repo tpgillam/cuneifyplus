@@ -9,7 +9,7 @@ from collections import OrderedDict
 from traceback import format_exc
 from urllib.parse import quote
 
-from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, 
+from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line,
         ordered_symbol_to_transliterations)
 from environment import DEPRECATED, MY_URL, get_cache, get_font_directory
 
@@ -29,20 +29,19 @@ FONT_NAMES = OrderedDict([
 FONTS_PATH_NAME = '/fonts'
 
 
-def _get_input_form(initial='Enter transliteration here...'):
+def _get_input_form(initial=''):
     ''' Return a form that the user can use to enter some transliterated text '''
-    font_name_selection = ''.join(['<option value="{0}">{1} (font: {0})</option>'.format(name, description) 
+    font_name_selection = ''.join(['<option value="{0}">{1} (font: {0})</option>'.format(name, description)
                                    for name, description in FONT_NAMES.items()])
     body = '''
-    <form action="{}/cuneify" method="post">
-    <textarea rows="10" cols="80" name="input"></textarea>
+    <form action="{}" method="post">
+    <textarea rows="10" cols="80" name="input">{}</textarea>
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <select name="font_name">{}</select>
     <input type="submit" name="action" value="Cuneify">
     <input type="submit" name="action" value="Create sign list">
-    </form>'''.format(MY_URL, font_name_selection)
-    # TODO Use 'initial' when it can be made to disappear on entry into widget
+    </form>'''.format(MY_URL, initial, font_name_selection)
     return body
 
 
@@ -65,9 +64,6 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
             except TransliterationNotUnderstood:
                 body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
-    # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
@@ -85,10 +81,6 @@ def _get_symbol_list_body(environ, transliteration, font_name):
             # Print out unrecognised tokens if there are any
             body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(', '.join(unrecognised_tokens))
 
-    # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
-    # TODO this can probably be neatened up a little bit
     return body
 
 
@@ -105,7 +97,7 @@ def construct_font_response(environ, start_response, path_info):
     # TODO we could cache this in memory if reading the font is slow
     with open(font_path, 'rb') as f:
         response_body = f.read()
-     
+
     status = '200 OK'
     if font_path.endswith('.woff'):
         ctype = 'application/x-font-woff'
@@ -124,16 +116,16 @@ def application(environ, start_response):
     # Use the appropriate behaviour here
     path_info = environ['PATH_INFO']
     form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
+    cuneiform_output = ""
+    transliteration = ""
     if path_info.startswith(FONTS_PATH_NAME):
         # Return the static font file
         return construct_font_response(environ, start_response, path_info)
-    elif path_info == '/cuneify':
+    # elif path_info == '/cuneify':
+    elif environ['REQUEST_METHOD']=="POST":
 
         # Whatever else happens, we always need a non-empty transliteration
         transliteration = form.getvalue('input')
-        if transliteration is None or transliteration == '':
-            # There is no transliteration, so show the input form again
-            body = _get_input_form()
 
         # Get the values of the other form inputs
         show_transliteration_value = form.getvalue('show_transliteration')
@@ -144,14 +136,14 @@ def application(environ, start_response):
         # The type of form submission we make determines what we do now
         if action_value == 'Cuneify':
             # We do a transliteration and show the output
-            body = _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
+            cuneiform_output += _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
         elif action_value == 'Create sign list':
             # Make a symbol list!
-            body = _get_symbol_list_body(environ, transliteration, font_name)
+            cuneiform_output += _get_symbol_list_body(environ, transliteration, font_name)
         else:
             raise RuntimeError("Unrecognised action value {}".format(action_value))
-    else:
-        body =  _get_input_form()
+
+    body =  _get_input_form(initial=transliteration)
 
     # TODO remove temporary workaround
     if DEPRECATED:
@@ -176,11 +168,14 @@ Please update your bookmarks to <a href='http://cuneifyplus.arch.cam.ac.uk'>http
 <style>''' + font_info + '''</style>
 </head>
 <body>
+<div>
+    {}
+</div>
 {}
 <br />
 <hr>
 <br />
-Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.  
+Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.
 However, if you wish to copy-and-paste (e.g. into a Word document), you may need to install the fonts in order for the
 characters to display correctly.  To install the fonts, follow the links below:
 <br />
@@ -200,11 +195,10 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 </body></html>'''
 
 
-    response_body = response_body.format(body)
+    response_body = response_body.format(cuneiform_output, body)
     response_body = response_body.encode('utf-8')
 
     status = '200 OK'
-    # ctype = 'text/plain'
     ctype = 'text/html'
     response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
     start_response(status, response_headers)
@@ -214,8 +208,9 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 # Below for testing only
 #
 if __name__ == '__main__':
+    MY_URL=""
     from wsgiref.simple_server import make_server
     httpd = make_server('localhost', 8051, application)
     # Wait for a single request, serve it and quit.
-    httpd.handle_request()
-
+    while 1:
+        httpd.handle_request()
