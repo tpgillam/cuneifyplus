@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import itertools
 import os
 import pickle
@@ -147,6 +149,7 @@ class CuneiformCacheBase:
             return b''
         if transliteration not in self.transliteration_to_cuneiform:
             raise UnrecognisedSymbol(transliteration)
+            # return transliteration.encode('utf8')
         return self.transliteration_to_cuneiform[transliteration]
 
     def get_stripped_transliteration(self, transliteration):
@@ -291,38 +294,57 @@ class MySQLCuneiformCache(CuneiformCacheBase):
         self._connection.close()
 
 
-
-def cuneify_line(cache, transliteration, show_transliteration):
-    ''' Take a line of transliteration and display the output, nicely formatted, on the terminal.
-        Should be used whilst in the context of cache.
+def cuneify_line_structured(cache, transliteration):
+    ''' Take a line of transliteration and return structured data of
+        - tokens, eg `tok1`
+        - separators, eg `.`
+        - symbols, eg `𒌉`
+        - unrecognized tokens, eg `bob`
     '''
     transliteration = transliteration.strip()
     # Split using alphanumeric characters (\w)
     tokens = re.split(TOKEN_REGEX, transliteration)
 
-    # It's a much easier code path if we just show the cuneiform
-    if not show_transliteration:
-        return ' '.join(cache.get_cuneiform(token) for token in tokens)
-
-    # Otherwise format something like this:
-    #
-    # tok1.tok2  tok3-tok4-5-   6
-    # A    BBBBB CC   DDD  EEEE F
     separators = re.findall(TOKEN_REGEX, transliteration)
     separators.append('')
-
     line_original = ''
     line_cuneiform = ''
-    for token, separator in zip(tokens, separators):
-        symbol = cache.get_cuneiform(token)
-        # FIXME -- take into account separator length (could be more than one
-        # character
-        n_spaces_after_symbol = 1 + max(len(separator) + len(token) - len(symbol), 0)
-        n_spaces_after_token_separator = 1 + max(len(symbol) - len(token), 0)
-        line_original += token + separator + ' ' * n_spaces_after_token_separator
-        line_cuneiform += symbol + ' ' * n_spaces_after_symbol
+    symbols = []
+    unrecognized_tokens = []
+    for token in tokens:
+        try:
+            symbol = cache.get_cuneiform(token)
+        except (UnrecognisedSymbol, TransliterationNotUnderstood):
+            symbol = None
+            unrecognized_tokens.append(token)
+        symbols.append(symbol)
 
-    return '{}\n{}'.format(line_original, line_cuneiform)
+    return (tokens, separators, symbols, unrecognized_tokens)
+
+def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indicator="?"):
+    ''' Take a line of transliteration and display the output, nicely formatted, on the terminal.
+        Should be used whilst in the context of cache.
+        unrecognized_indicator : String to display if token not recognized. If empty string,
+          the token will be returned as-is.
+    '''
+
+    (tokens, separators, raw_symbols, unrecognized_tokens) = cuneify_line_structured(cache, transliteration)
+
+    # Substitube chosen string for unrecognized tokens
+    symbols = [s if s is not None else t if unrecognized_indicator=="" else unrecognized_indicator for (t, s) in zip(tokens, raw_symbols)]
+
+    if show_transliteration:
+        line_original = ""
+        line_cuneiform = ""
+        for token, separator, symbol in zip(tokens, separators, symbols):
+            if symbol is None:
+                symbol = token if unrecognized_indicator=="" else unrecognized_indicator
+            width = max(len(token + separator), len(symbol))
+            line_original += (token + separator).ljust(width)
+            line_cuneiform += symbol.ljust(width)
+        return '{}\n{}'.format(line_original, line_cuneiform)
+    else:
+        return " ".join(symbols)
 
 
 def cuneify_file(cache, file_name, show_transliteration):
