@@ -347,18 +347,30 @@ def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indi
         return " ".join(symbols)
 
 
-def cuneify_file(cache, file_name, show_transliteration):
+def cuneify_file(cache, file_name, show_transliteration, parse_atf=True):
     ''' Given a text file with one or more lines of transliterated text, print out the corresponding
         version in cuneiform
     '''
     output = ''
-    with open(file_name) as input_file:
-        for line in input_file:
-            output += cuneify_line(cache, line, show_transliteration)
-            output += '\n'
-            # If also showing transliteration then an extra blank line aids legibility
-            if show_transliteration:
+    if parse_atf:
+        with open(file_name) as input_file:
+            for line in input_file:
+                atf_line_parts = re.search('^([0-9]+\.)([ \t]*)(.*)', line)
+                if atf_line_parts:
+                    transliteration = atf_line_parts.group(3)
+                    output += line
+                    output += "#" + atf_line_parts.group(2) + cuneify_line(cache, transliteration, show_transliteration) + "\n"
+                else:
+                    output += "Y" + line
+
+    else:
+        with open(file_name) as input_file:
+            for line in input_file:
+                output += cuneify_line(cache, line, show_transliteration)
                 output += '\n'
+                # If also showing transliteration then an extra blank line aids legibility
+                if show_transliteration:
+                    output += '\n'
     return output
 
 
