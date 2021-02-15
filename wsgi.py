@@ -9,7 +9,7 @@ from collections import OrderedDict
 from traceback import format_exc
 from urllib.parse import quote
 
-from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line,
+from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, cuneify_interator,
         ordered_symbol_to_transliterations)
 from environment import DEPRECATED, MY_URL, get_cache, get_font_directory
 
@@ -49,20 +49,13 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
     ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
     body = ''
     with get_cache(environ) as cache:
-        for line in transliteration.split('\n'):
-            # Make empty lines appear as breaks in the output
-            line = line.strip()
-            if line == '':
-                body += '<br />'
-                continue
-
-            try:
-                body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
-                # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
-            except UnrecognisedSymbol as exception:
-                body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
-            except TransliterationNotUnderstood:
-                body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
+        try:
+            body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_interator(cache, iter(transliteration.splitlines()), show_transliteration, parse_atf=False).replace('\n', '<br />'))
+            # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+        except UnrecognisedSymbol as exception:
+            body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
+        except TransliterationNotUnderstood:
+            body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
 
     # TODO this can probably be neatened up a little bit
     return body
