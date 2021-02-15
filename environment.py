@@ -3,7 +3,7 @@
 import os
 import socket
 
-from cuneify_interface import FileCuneiformCache, MySQLCuneiformCache
+from cuneify_interface import FileCuneiformCache
 
 
 if not "mws" in socket.gethostname().lower():
@@ -21,12 +21,6 @@ def get_font_directory(environ):
 
 def get_cache(environ):
     """ Return the standard cuneiform cache """
-    # username: cuneify
-    # password: puffin
-    # dbname: cuneify
-    # table: lookup   - (id, stuff). Latter is a BLOB type. Idea is that it will contain one row
-    # return MySQLCuneiformCache('localhost', 'cuneify', 'puffin', 'cuneify')
-
     cache_file_path = os.path.normpath(
         os.path.join(environ["DOCUMENT_ROOT"], "cuneifyplus", "cuneiform_cache.pickle")
     )

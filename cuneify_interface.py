@@ -242,56 +242,6 @@ class FileCuneiformCache(CuneiformCacheBase):
         self._cache_modified = False
 
 
-class MySQLCuneiformCache(CuneiformCacheBase):
-    ''' Store the cuneiform cache in a mysql table '''
-
-    def __init__(self, host, user, password, dbname):
-        super().__init__()
-        self._host = host
-        self._user = user
-        self._password = password
-        self._dbname = dbname
-
-    def __enter__(self):
-        super().__enter__()
-
-        import MySQLdb
-        self._conection = MySQLdb.connect(host=self._host, user=self._user,
-                                          passwd=self._password, db=self._dbname)
-        cursor = self._connection.cursor()
-
-        cursor.execute('select * from lookup')
-        rows = cur.fetchall()
-
-        if len(rows) == 0:
-            # No data with which to update our cache
-            return
-
-        if len(rows) > 1:
-            raise RuntimeError("Expected at most 1 row, but got {}".format(len(rows)))
-
-        row = rows[0]
-        stored_cache = pickle.loads(row[1])
-        self.transliteration_to_cuneiform.update(stored_cache)
-        return self
-
-    def __exit__(self, type_, value, traceback):
-        if not self._cache_modified:
-            return
-
-        new_value = pickle.dumps(self.transliteration_to_cuneiform)
-
-        cursor = self._connection.cursor()
-        # Clear existing row, if present
-        cursor.execute('DELETE FROM lookup')
-
-        # Insert the new data
-        cursor.execute('INSERT INTO lookup (stuff) VALUES (%s)', (new_value,))
-
-        self._connection.close()
-
-
-
 def cuneify_line(cache, transliteration, show_transliteration):
     ''' Take a line of transliteration and display the output, nicely formatted, on the terminal.
         Should be used whilst in the context of cache.
