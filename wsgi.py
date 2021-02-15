@@ -6,6 +6,7 @@ import cgi
 import os
 
 from collections import OrderedDict
+from html import escape
 from traceback import format_exc
 from urllib.parse import quote
 
@@ -130,7 +131,7 @@ def application(environ, start_response):
     elif path_info == '/cuneify':
 
         # Whatever else happens, we always need a non-empty transliteration
-        transliteration = form.getvalue('input')
+        transliteration = escape(form.getvalue('input'))
         if transliteration is None or transliteration == '':
             # There is no transliteration, so show the input form again
             body = _get_input_form()
@@ -138,8 +139,8 @@ def application(environ, start_response):
         # Get the values of the other form inputs
         show_transliteration_value = form.getvalue('show_transliteration')
         show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
-        font_name = form.getvalue('font_name')
-        action_value = form.getvalue('action')
+        font_name = escape(form.getvalue('font_name'))
+        action_value = escape(form.getvalue('action'))
 
         # The type of form submission we make determines what we do now
         if action_value == 'Cuneify':
