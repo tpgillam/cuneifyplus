@@ -321,7 +321,7 @@ def cuneify_line_structured(cache, transliteration):
 
     return (tokens, separators, symbols, unrecognized_tokens)
 
-def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indicator="?"):
+def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indicator=""):
     ''' Take a line of transliteration and display the output, nicely formatted, on the terminal.
         Should be used whilst in the context of cache.
         unrecognized_indicator : String to display if token not recognized. If empty string,
