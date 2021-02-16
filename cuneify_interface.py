@@ -357,7 +357,7 @@ def cuneify_iterator(cache, iterator, show_transliteration, parse_atf=True):
                 output += line
                 output += "#" + atf_line_parts.group(2) + cuneify_line(cache, transliteration, show_transliteration) + "\n"
             else:
-                output += "Y" + line
+                output += line
     else:
         for line in iterator:
             output += cuneify_line(cache, line, show_transliteration)
