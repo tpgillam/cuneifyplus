@@ -48,10 +48,11 @@ def _get_input_form(initial=''):
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
     ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
     body = ''
+    is_atf = "\n2." in transliteration # Hacky way to decide if this is an atf formatted file
     with get_cache(environ) as cache:
+        cuneified = cuneify_iterator(cache, iter(transliteration.splitlines(True)), show_transliteration, parse_atf=is_atf)
         try:
-            body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_iterator(cache, iter(transliteration.splitlines()), show_transliteration, parse_atf=False).replace('\n', '<br />'))
-            # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
+            body += '<pre class="{}">{}</pre><br />'.format(font_name.lower(), cuneified)
         except UnrecognisedSymbol as exception:
             body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
         except TransliterationNotUnderstood:
