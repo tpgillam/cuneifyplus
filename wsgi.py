@@ -9,7 +9,7 @@ from collections import OrderedDict
 from traceback import format_exc
 from urllib.parse import quote
 
-from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, cuneify_interator,
+from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, cuneify_iterator,
         ordered_symbol_to_transliterations)
 from environment import DEPRECATED, MY_URL, get_cache, get_font_directory
 
@@ -50,7 +50,7 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
     body = ''
     with get_cache(environ) as cache:
         try:
-            body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_interator(cache, iter(transliteration.splitlines()), show_transliteration, parse_atf=False).replace('\n', '<br />'))
+            body += '<span class="{}">{}</span><br />'.format(font_name.lower(), cuneify_iterator(cache, iter(transliteration.splitlines()), show_transliteration, parse_atf=False).replace('\n', '<br />'))
             # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
         except UnrecognisedSymbol as exception:
             body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
@@ -204,6 +204,6 @@ if __name__ == '__main__':
     MY_URL=""
     from wsgiref.simple_server import make_server
     httpd = make_server('localhost', 8051, application)
-    # Wait for a single request, serve it and quit.
+    print("Serving on http://localhost:8051")
     while 1:
         httpd.handle_request()

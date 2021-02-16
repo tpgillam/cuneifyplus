@@ -347,7 +347,7 @@ def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indi
         return " ".join(symbols)
 
 
-def cuneify_interator(cache, iterator, show_transliteration, parse_atf=True):
+def cuneify_iterator(cache, iterator, show_transliteration, parse_atf=True):
     output = ''
     if parse_atf:
         for line in iterator:
@@ -373,7 +373,7 @@ def cuneify_file(cache, file_name, show_transliteration, parse_atf=True):
         version in cuneiform
     '''
     with open(file_name) as iterator:
-        return cuneify_interator(cache, iterator, show_transliteration, parse_atf=parse_atf)
+        return cuneify_iterator(cache, iterator, show_transliteration, parse_atf=parse_atf)
 
 
 def ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=False):
