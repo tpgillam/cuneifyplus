@@ -421,6 +421,8 @@ def main():
     parser.add_argument('--show-transliteration', action='store_true',
                         help='By default just show cuneiform. If this is set, '
                              'also display original transliteration')
+    parser.add_argument('--parse-atf', action='store_true',
+                        help='If this is set parse file as .atf formatted')
     parser.add_argument('--symbol-list', action='store_true',
         help='If this is set, show a mapping between the transliterated symbols and cuneiform.')
     parser.add_argument('--cache', help='Use specified cache file',
@@ -440,7 +442,7 @@ def main():
                 print('Unrecognised symbols:')
                 print(unrecognised_tokens)
         else:
-            print(cuneify_file(cache, args.input_file, args.show_transliteration))
+            print(cuneify_file(cache, args.input_file, args.show_transliteration, args.parse_atf))
 
 
 if __name__ == '__main__':
