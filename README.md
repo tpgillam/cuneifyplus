@@ -12,7 +12,7 @@ Can be deployed to e.g. Heroku as wsgi app
 https://cuneify.herokuapp.com/
 
 
-## Commannd line usage
+## Command line usage
 
 ```bash
 $python3 cuneify_interface.py test_file.txt
