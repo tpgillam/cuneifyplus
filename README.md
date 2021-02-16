@@ -13,7 +13,7 @@ Example: https://cuneify.herokuapp.com/
 
 ```bash
 $ heroku create cuneify
-Creating app... done, ⬢ mystic-wind-83
+Creating app... done, ⬢ cuneify
 Created http://cuneify.herokuapp.com/ | git@heroku.com:cuneify.git
 
 $ git push heroku master
