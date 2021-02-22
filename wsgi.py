@@ -35,12 +35,12 @@ FONT_NAMES = OrderedDict(
     ]
 )
 
-FONTS_PATH_NAME = '/fonts'
+FONTS_PATH_NAME = "/fonts"
 
 
-def _get_input_form(initial=''):
+def _get_input_form(initial=""):
     """ Return a form that the user can use to enter some transliterated text """
-    font_name_selection = ''.join(['<option value="{0}">{1} (font: {0})</option>'.format(name, description)
+    font_name_selection = "".join(["<option value=\"{0}\">{1} (font: {0})</option>".format(name, description)
                                    for name, description in FONT_NAMES.items()])
     body = """
     <form action="{}" method="post">
@@ -57,17 +57,17 @@ def _get_input_form(initial=''):
 
 
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
-    ''' Return the HTML body contents when we've been given a transliteration, and show in the specified font '''
-    body = ''
+    """ Return the HTML body contents when we've been given a transliteration, and show in the specified font """
+    body = ""
     is_atf = "\n2." in transliteration # Hacky way to decide if this is an atf formatted file
     with get_cache(environ) as cache:
         cuneified = cuneify_iterator(cache, iter(transliteration.splitlines(True)), show_transliteration, parse_atf=is_atf)
         try:
-            body += '<pre class="{}">{}</pre><br />'.format(font_name.lower(), cuneified)
+            body += "<pre class=\"{}\">{}</pre><br />".format(font_name.lower(), cuneified)
         except UnrecognisedSymbol as exception:
-            body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(exception.transliteration, line)
+            body += "<font color=\"red\">Unknown symbol \"{}\" in \"{}\"</font><br />".format(exception.transliteration, line)
         except TransliterationNotUnderstood:
-            body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(line)
+            body += "<font color=\"red\">Possible formatting error in \"{}\"</font><br />".format(line)
 
     # TODO this can probably be neatened up a little bit
     return body
@@ -84,14 +84,14 @@ def _get_symbol_list_body(environ, transliteration, font_name):
             cache, transliteration, return_unrecognised=True
         )
         for cuneiform_symbol, transliterations in symbol_to_transliterations.items():
-            line = '<span class="{}">{}</span>: {}<br />'.format(
+            line = "<span class=\"{}\">{}</span>: {}<br />".format(
                 font_name.lower(), cuneiform_symbol, ", ".join(transliterations)
             )
             body += line
 
         if len(unrecognised_tokens) > 0:
             # Print out unrecognised tokens if there are any
-            body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(
+            body += "<br /><font color=\"red\">These tokens were unrecognised: {}</font><br />".format(
                 ", ".join(unrecognised_tokens)
             )
 
@@ -144,10 +144,10 @@ def application(environ, start_response):
     if path_info.startswith(FONTS_PATH_NAME):
         # Return the static font file
         return construct_font_response(environ, start_response, path_info)
-    elif environ['REQUEST_METHOD'] == "POST":
+    elif environ["REQUEST_METHOD"] == "POST":
 
         # Whatever else happens, we always need a non-empty transliteration
-        transliteration = form.getvalue('input')
+        transliteration = form.getvalue("input")
 
         # Get the values of the other form inputs
         show_transliteration_value = form.getvalue("show_transliteration")
@@ -164,7 +164,7 @@ def application(environ, start_response):
             cuneiform_output += _get_cuneify_body(
                 environ, transliteration, show_transliteration, font_name
             )
-        elif action_value == 'Create sign list':
+        elif action_value == "Create sign list":
             # Make a symbol list!
             cuneiform_output += _get_symbol_list_body(environ, transliteration, font_name)
         else:
@@ -176,9 +176,9 @@ def application(environ, start_response):
         [
             """@font-face {{{{
     font-family: {1};
-    src: url(fonts/{1}.woff) format('woff'),
-         url(fonts/{1}.eot) format('embedded-opentype'),
-         url(fonts/{1}.ttf) format('truetype');
+    src: url(fonts/{1}.woff) format("woff"),
+         url(fonts/{1}.eot) format("embedded-opentype"),
+         url(fonts/{1}.ttf) format("truetype");
 }}}}
 .{0} {{{{
     font-family: {1};
@@ -228,8 +228,8 @@ by Steve Tinney. Created by Tom Gillam, 2016.
     response_body = response_body.format(cuneiform_output, body)
     response_body = response_body.encode("utf-8")
 
-    status = '200 OK'
-    ctype = 'text/html'
+    status = "200 OK"
+    ctype = "text/html"
     response_headers = [
         ("Content-Type", ctype),
         ("Content-Length", str(len(response_body))),
@@ -240,7 +240,7 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 
 # Below for testing only
 #
-if __name__ == '__main__':
+if __name__ == "__main__":
     MY_URL=""
     from wsgiref.simple_server import make_server
     httpd = make_server("localhost", 8051, application)
