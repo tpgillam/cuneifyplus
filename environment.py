@@ -1,65 +1,36 @@
-''' Environment-specific commands '''
+""" Environment-specific commands """
 
 import os
 import socket
 
-from cuneify_interface import FileCuneiformCache, MySQLCuneiformCache
+from cuneify_interface import FileCuneiformCache
 
 
+if "mws" in socket.gethostname().lower():
 
-if 'mws' in socket.gethostname().lower():
     # Running in MWS
-
-    MY_URL = 'http://cuneifyplus.arch.cam.ac.uk'
-
-    # TODO Remove temporary workaround whilst migrating from OpenShift to Cambridge University server
-    DEPRECATED = False
+    MY_URL = "http://cuneifyplus.arch.cam.ac.uk"
 
     def get_font_directory(environ):
-        return os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus', 'fonts')
+        return os.path.join(environ["DOCUMENT_ROOT"], "cuneifyplus", "fonts")
 
     def get_cache(environ):
-        ''' Return the standard cuneiform cache '''
-        # username: cuneify
-        # password: puffin
-        # dbname: cuneify
-        # table: lookup   - (id, stuff). Latter is a BLOB type. Idea is that it will contain one row
-        # return MySQLCuneiformCache('localhost', 'cuneify', 'puffin', 'cuneify')
-
-        cache_file_path = os.path.normpath(os.path.join(environ['DOCUMENT_ROOT'], 'cuneifyplus',
-            'cuneiform_cache.pickle'))
+        """ Return the standard cuneiform cache """
+        cache_file_path = os.path.normpath(
+            os.path.join(environ["DOCUMENT_ROOT"], "cuneifyplus", "cuneiform_cache.pickle")
+        )
         return FileCuneiformCache(cache_file_path=cache_file_path, read_only=True)
-
-
-elif 'openshift' in socket.gethostname().lower():
-
-    # Running on OpenShift
-
-    MY_URL = 'https://cuneifyplus-puffin.rhcloud.com'
-
-    DEPRECATED = True
-
-    def get_font_directory(environ):
-        return os.path.join(environ['OPENSHIFT_DATA_DIR'], 'fonts')
-
-    def get_cache(environ):
-        ''' Return the standard cuneiform cache '''
-        # We use a cache in the data directory. This isn't touched by the deployment process
-        cache_file_path = os.path.normpath(os.path.join(environ['OPENSHIFT_DATA_DIR'], 'cuneiform_cache.pickle'))
-        return FileCuneiformCache(cache_file_path=cache_file_path)
 
 else:
 
-    # Running locally?
-    MY_URL = ''
-
-    DEPRECATED = False
+    # Running locally
+    MY_URL = ""
 
     def get_font_directory(environ):
-        return 'fonts'
+        return "fonts"
 
     def get_cache(environ):
-        ''' Return the standard cuneiform cache '''
+        """ Return the standard cuneiform cache """
         # We use a cache in the data directory. This isn't touched by the deployment process
-        cache_file_path = 'cuneiform_cache.pickle'
+        cache_file_path = "cuneiform_cache.pickle"
         return FileCuneiformCache(cache_file_path=cache_file_path)

@@ -1,39 +1,48 @@
 # In order to work with the Cambridge University MWS server
 import sys
-sys.path.append('/var/www/default/docroot/cuneifyplus')
+
+sys.path.append("/var/www/default/docroot/cuneifyplus")
 
 import cgi
 import os
 
 from collections import OrderedDict
+from html import escape
 from traceback import format_exc
 from urllib.parse import quote
 
-from cuneify_interface import (TransliterationNotUnderstood, UnrecognisedSymbol, cuneify_line, cuneify_iterator,
-        ordered_symbol_to_transliterations)
-from environment import DEPRECATED, MY_URL, get_cache, get_font_directory
+from cuneify_interface import (
+    TransliterationNotUnderstood,
+    UnrecognisedSymbol,
+    cuneify_line,
+    cuneify_iterator,
+    ordered_symbol_to_transliterations,
+)
+from environment import MY_URL, get_cache, get_font_directory
 
 
 # A mapping from font name to description
-FONT_NAMES = OrderedDict([
-        ('Santakku', 'Cursive Old Babylonian'),
-        ('CuneiformOB', 'Monumental Old Babylonian'),
-        ('SantakkuM', 'Monumental Old Babylonian'),
-        ('UllikummiA', 'Hittite'),
-        ('UllikummiB', 'Hittite'),
-        ('UllikummiC', 'Hittite'),
-        ('Assurbanipal', 'Neo-Assyrian'),
-        ('CuneiformNA', 'Neo-Assyrian'),
-        ])
+FONT_NAMES = OrderedDict(
+    [
+        ("Santakku", "Cursive Old Babylonian"),
+        ("CuneiformOB", "Monumental Old Babylonian"),
+        ("SantakkuM", "Monumental Old Babylonian"),
+        ("UllikummiA", "Hittite"),
+        ("UllikummiB", "Hittite"),
+        ("UllikummiC", "Hittite"),
+        ("Assurbanipal", "Neo-Assyrian"),
+        ("CuneiformNA", "Neo-Assyrian"),
+    ]
+)
 
 FONTS_PATH_NAME = '/fonts'
 
 
 def _get_input_form(initial=''):
-    ''' Return a form that the user can use to enter some transliterated text '''
+    """ Return a form that the user can use to enter some transliterated text """
     font_name_selection = ''.join(['<option value="{0}">{1} (font: {0})</option>'.format(name, description)
                                    for name, description in FONT_NAMES.items()])
-    body = '''
+    body = """
     <form action="{}" method="post">
     <textarea rows="10" cols="80" name="input">{}</textarea>
     <br /> <br />
@@ -41,7 +50,9 @@ def _get_input_form(initial=''):
     <select name="font_name">{}</select>
     <input type="submit" name="action" value="Cuneify">
     <input type="submit" name="action" value="Create sign list">
-    </form>'''.format(MY_URL, initial, font_name_selection)
+    </form>""".format(
+        MY_URL, initial, font_name_selection
+    )
     return body
 
 
@@ -63,90 +74,107 @@ def _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
 
 
 def _get_symbol_list_body(environ, transliteration, font_name):
-    ''' Return the HTML body for the symbol list page '''
-    body = ''
+    """ Return the HTML body for the symbol list page """
+    body = ""
     with get_cache(environ) as cache:
-        symbol_to_transliterations, unrecognised_tokens = ordered_symbol_to_transliterations(cache, transliteration, return_unrecognised=True)
+        (
+            symbol_to_transliterations,
+            unrecognised_tokens,
+        ) = ordered_symbol_to_transliterations(
+            cache, transliteration, return_unrecognised=True
+        )
         for cuneiform_symbol, transliterations in symbol_to_transliterations.items():
-            line = '<span class="{}">{}</span>: {}<br />'.format(font_name.lower(), cuneiform_symbol, ', '.join(transliterations))
+            line = '<span class="{}">{}</span>: {}<br />'.format(
+                font_name.lower(), cuneiform_symbol, ", ".join(transliterations)
+            )
             body += line
 
         if len(unrecognised_tokens) > 0:
             # Print out unrecognised tokens if there are any
-            body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(', '.join(unrecognised_tokens))
+            body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(
+                ", ".join(unrecognised_tokens)
+            )
 
     return body
 
 
 def construct_font_response(environ, start_response, path_info):
-    ''' Given a requested path, construct a response with the data from the requested font file '''
+    """ Given a requested path, construct a response with the data from the requested font file """
     font_directory = get_font_directory(environ)
 
     font_path = os.path.normpath(path_info.replace(FONTS_PATH_NAME, font_directory))
 
     if not font_path.startswith(font_directory):
-        raise RuntimeError("Requesting font {} that is not in fonts directory {}".format(font_path, font_directory))
+        raise RuntimeError(
+            "Requesting font {} that is not in fonts directory {}".format(
+                font_path, font_directory
+            )
+        )
 
     # The response body is just what we get from reading the font.
     # TODO we could cache this in memory if reading the font is slow
-    with open(font_path, 'rb') as f:
+    with open(font_path, "rb") as f:
         response_body = f.read()
 
-    status = '200 OK'
-    if font_path.endswith('.woff'):
-        ctype = 'application/x-font-woff'
-    elif font_path.endswith('.eot'):
-        ctype = 'application/vnd.ms-fontobject'
-    elif font_path.endswith('.ttf'):
-        ctype = 'application/x-font-ttf'
+    status = "200 OK"
+    if font_path.endswith(".woff"):
+        ctype = "application/x-font-woff"
+    elif font_path.endswith(".eot"):
+        ctype = "application/vnd.ms-fontobject"
+    elif font_path.endswith(".ttf"):
+        ctype = "application/x-font-ttf"
 
-    response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
+    response_headers = [
+        ("Content-Type", ctype),
+        ("Content-Length", str(len(response_body))),
+    ]
     start_response(status, response_headers)
     return [response_body]
 
 
 def application(environ, start_response):
-    ''' Entry point for the application '''
+    """ Entry point for the application """
     # Use the appropriate behaviour here
-    path_info = environ['PATH_INFO']
-    form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=environ, keep_blank_values=True)
+    path_info = environ["PATH_INFO"]
+    form = cgi.FieldStorage(
+        fp=environ["wsgi.input"], environ=environ, keep_blank_values=True
+    )
     cuneiform_output = ""
     transliteration = ""
     if path_info.startswith(FONTS_PATH_NAME):
         # Return the static font file
         return construct_font_response(environ, start_response, path_info)
-    # elif path_info == '/cuneify':
-    elif environ['REQUEST_METHOD']=="POST":
+    elif environ['REQUEST_METHOD'] == "POST":
 
         # Whatever else happens, we always need a non-empty transliteration
         transliteration = form.getvalue('input')
 
         # Get the values of the other form inputs
-        show_transliteration_value = form.getvalue('show_transliteration')
-        show_transliteration = show_transliteration_value is not None and show_transliteration_value.lower() == 'on'
-        font_name = form.getvalue('font_name')
-        action_value = form.getvalue('action')
+        show_transliteration_value = form.getvalue("show_transliteration")
+        show_transliteration = (
+            show_transliteration_value is not None
+            and show_transliteration_value.lower() == "on"
+        )
+        font_name = escape(form.getvalue("font_name"))
+        action_value = escape(form.getvalue("action"))
 
         # The type of form submission we make determines what we do now
-        if action_value == 'Cuneify':
+        if action_value == "Cuneify":
             # We do a transliteration and show the output
-            cuneiform_output += _get_cuneify_body(environ, transliteration, show_transliteration, font_name)
+            cuneiform_output += _get_cuneify_body(
+                environ, transliteration, show_transliteration, font_name
+            )
         elif action_value == 'Create sign list':
             # Make a symbol list!
             cuneiform_output += _get_symbol_list_body(environ, transliteration, font_name)
         else:
             raise RuntimeError("Unrecognised action value {}".format(action_value))
-
     body =  _get_input_form(initial=transliteration)
 
-    # TODO remove temporary workaround
-    if DEPRECATED:
-        body = '''<span style="color:red"><h1>This site is moving!</h1><br />
-Please update your bookmarks to <a href='http://cuneifyplus.arch.cam.ac.uk'>http://cuneifyplus.arch.cam.ac.uk</a>
-<br /><br /><br /><br /></span>''' + body
-
     # All the CSS representing font classes
-    font_info = '\n'.join(['''@font-face {{{{
+    font_info = "\n".join(
+        [
+            """@font-face {{{{
     font-family: {1};
     src: url(fonts/{1}.woff) format('woff'),
          url(fonts/{1}.eot) format('embedded-opentype'),
@@ -154,12 +182,20 @@ Please update your bookmarks to <a href='http://cuneifyplus.arch.cam.ac.uk'>http
 }}}}
 .{0} {{{{
     font-family: {1};
-}}}}'''.format(font_name.lower(), font_name) for font_name in FONT_NAMES])
+}}}}""".format(
+                font_name.lower(), font_name
+            )
+            for font_name in FONT_NAMES
+        ]
+    )
 
-    response_body = '''<!doctype html>
+    response_body = (
+        """<!doctype html>
 <html lang="en">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<style>''' + font_info + '''</style>
+<style>"""
+        + font_info
+        + """</style>
 </head>
 <body>
 <div>
@@ -186,15 +222,18 @@ characters to display correctly.  To install the fonts, follow the links below:
 <br />
 Powered by <a href="http://oracc.museum.upenn.edu/saao/knpp/cuneiformrevealed/cuneify/">Cuneify</a>,
 by Steve Tinney. Created by Tom Gillam, 2016.
-</body></html>'''
-
+</body></html>"""
+    )
 
     response_body = response_body.format(cuneiform_output, body)
-    response_body = response_body.encode('utf-8')
+    response_body = response_body.encode("utf-8")
 
     status = '200 OK'
     ctype = 'text/html'
-    response_headers = [('Content-Type', ctype), ('Content-Length', str(len(response_body)))]
+    response_headers = [
+        ("Content-Type", ctype),
+        ("Content-Length", str(len(response_body))),
+    ]
     start_response(status, response_headers)
     return [response_body]
 
@@ -204,7 +243,7 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 if __name__ == '__main__':
     MY_URL=""
     from wsgiref.simple_server import make_server
-    httpd = make_server('localhost', 8051, application)
+    httpd = make_server("localhost", 8051, application)
     print("Serving on http://localhost:8051")
     while 1:
         httpd.handle_request()
