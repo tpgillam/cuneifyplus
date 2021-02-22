@@ -5,7 +5,16 @@ This is the source code for http://cuneifyplus.arch.cam.ac.uk
 It is a wrapper around Steve Tinney's 'cuneify' tool, which allows for more complex conversion of transliterated
 Babylonian and Akkadian into various cuneiform fonts.
 
-## Server
+## Local Server
+
+```bash
+$ python3 wsgi.py
+Serving on http://localhost:8051
+```
+
+Open the URL in browser to use the HTML interface.
+
+## Remote Server
 
 Can be deployed to e.g. Heroku as wsgi app.
 
