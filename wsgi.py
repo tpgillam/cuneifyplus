@@ -51,7 +51,7 @@ def _get_input_form(initial=""):
     <input type="submit" name="action" value="Cuneify">
     <input type="submit" name="action" value="Create sign list">
     </form>""".format(
-        MY_URL, initial, font_name_selection
+        MY_URL, cgi.escape(initial), font_name_selection
     )
     return body
 
@@ -169,7 +169,7 @@ def application(environ, start_response):
             cuneiform_output += _get_symbol_list_body(environ, transliteration, font_name)
         else:
             raise RuntimeError("Unrecognised action value {}".format(action_value))
-    body =  _get_input_form(initial=transliteration)
+    body = _get_input_form(initial=transliteration)
 
     # All the CSS representing font classes
     font_info = "\n".join(
