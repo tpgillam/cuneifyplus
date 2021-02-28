@@ -15,6 +15,7 @@ from cuneify_interface import (
     TransliterationNotUnderstood,
     UnrecognisedSymbol,
     cuneify_line,
+    cuneify_iterator,
     ordered_symbol_to_transliterations,
 )
 from environment import MY_URL, get_cache, get_font_directory
@@ -37,60 +38,37 @@ FONT_NAMES = OrderedDict(
 FONTS_PATH_NAME = "/fonts"
 
 
-def _get_input_form(initial="Enter transliteration here..."):
+def _get_input_form(initial=""):
     """ Return a form that the user can use to enter some transliterated text """
-    font_name_selection = "".join(
-        [
-            '<option value="{0}">{1} (font: {0})</option>'.format(name, description)
-            for name, description in FONT_NAMES.items()
-        ]
-    )
+    font_name_selection = "".join(["<option value=\"{0}\">{1} (font: {0})</option>".format(name, description)
+                                   for name, description in FONT_NAMES.items()])
     body = """
-    <form action="{}/cuneify" method="post">
-    <textarea rows="10" cols="80" name="input"></textarea>
+    <form action="{}" method="post">
+    <textarea rows="10" cols="80" name="input">{}</textarea>
     <br /> <br />
     <input type="checkbox" name="show_transliteration">Show transliteration with output<br /><br />
     <select name="font_name">{}</select>
     <input type="submit" name="action" value="Cuneify">
     <input type="submit" name="action" value="Create sign list">
     </form>""".format(
-        MY_URL, font_name_selection
+        MY_URL, cgi.escape(initial), font_name_selection
     )
-    # TODO Use 'initial' when it can be made to disappear on entry into widget
     return body
 
 
 def _get_cuneify_body(environ, transliteration, show_transliteration, font_name):
     """ Return the HTML body contents when we've been given a transliteration, and show in the specified font """
     body = ""
+    is_atf = "\n2." in transliteration # Hacky way to decide if this is an atf formatted file
     with get_cache(environ) as cache:
-        for line in transliteration.split("\n"):
-            # Make empty lines appear as breaks in the output
-            line = line.strip()
-            if line == "":
-                body += "<br />"
-                continue
+        cuneified = cuneify_iterator(cache, iter(transliteration.splitlines(True)), show_transliteration, parse_atf=is_atf)
+        try:
+            body += "<pre class=\"{}\">{}</pre><br />".format(font_name.lower(), cuneified)
+        except UnrecognisedSymbol as exception:
+            body += "<font color=\"red\">Unknown symbol \"{}\" in \"{}\"</font><br />".format(exception.transliteration, line)
+        except TransliterationNotUnderstood:
+            body += "<font color=\"red\">Possible formatting error in \"{}\"</font><br />".format(line)
 
-            try:
-                body += '<span class="{}">{}</span><br />'.format(
-                    font_name.lower(),
-                    cuneify_line(cache, line, show_transliteration).replace(
-                        "\n", "<br />"
-                    ),
-                )
-                # body += '{}<br />'.format(cuneify_line(cache, line, show_transliteration).replace('\n', '<br />'))
-            except UnrecognisedSymbol as exception:
-                body += '<font color="red">Unknown symbol "{}" in "{}"</font><br />'.format(
-                    exception.transliteration, line
-                )
-            except TransliterationNotUnderstood:
-                body += '<font color="red">Possible formatting error in "{}"</font><br />'.format(
-                    line
-                )
-
-    # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
     # TODO this can probably be neatened up a little bit
     return body
 
@@ -106,21 +84,17 @@ def _get_symbol_list_body(environ, transliteration, font_name):
             cache, transliteration, return_unrecognised=True
         )
         for cuneiform_symbol, transliterations in symbol_to_transliterations.items():
-            line = '<span class="{}">{}</span>: {}<br />'.format(
+            line = "<span class=\"{}\">{}</span>: {}<br />".format(
                 font_name.lower(), cuneiform_symbol, ", ".join(transliterations)
             )
             body += line
 
         if len(unrecognised_tokens) > 0:
             # Print out unrecognised tokens if there are any
-            body += '<br /><font color="red">These tokens were unrecognised: {}</font><br />'.format(
+            body += "<br /><font color=\"red\">These tokens were unrecognised: {}</font><br />".format(
                 ", ".join(unrecognised_tokens)
             )
 
-    # TODO will need javascript to re-populate the text area, I believe
-    # body += '<br /><br /><a href="{}?input={}">Go back</a><br />'.format(MY_URL, quote(transliteration))
-    body += '<br /><br /><a href="{}">Go back</a><br />'.format(MY_URL)
-    # TODO this can probably be neatened up a little bit
     return body
 
 
@@ -165,16 +139,15 @@ def application(environ, start_response):
     form = cgi.FieldStorage(
         fp=environ["wsgi.input"], environ=environ, keep_blank_values=True
     )
+    cuneiform_output = ""
+    transliteration = ""
     if path_info.startswith(FONTS_PATH_NAME):
         # Return the static font file
         return construct_font_response(environ, start_response, path_info)
-    elif path_info == "/cuneify":
+    elif environ["REQUEST_METHOD"] == "POST":
 
         # Whatever else happens, we always need a non-empty transliteration
-        transliteration = escape(form.getvalue("input"))
-        if transliteration is None or transliteration == "":
-            # There is no transliteration, so show the input form again
-            body = _get_input_form()
+        transliteration = form.getvalue("input")
 
         # Get the values of the other form inputs
         show_transliteration_value = form.getvalue("show_transliteration")
@@ -188,25 +161,24 @@ def application(environ, start_response):
         # The type of form submission we make determines what we do now
         if action_value == "Cuneify":
             # We do a transliteration and show the output
-            body = _get_cuneify_body(
+            cuneiform_output += _get_cuneify_body(
                 environ, transliteration, show_transliteration, font_name
             )
         elif action_value == "Create sign list":
             # Make a symbol list!
-            body = _get_symbol_list_body(environ, transliteration, font_name)
+            cuneiform_output += _get_symbol_list_body(environ, transliteration, font_name)
         else:
             raise RuntimeError("Unrecognised action value {}".format(action_value))
-    else:
-        body = _get_input_form()
+    body = _get_input_form(initial=transliteration)
 
     # All the CSS representing font classes
     font_info = "\n".join(
         [
             """@font-face {{{{
     font-family: {1};
-    src: url(fonts/{1}.woff) format('woff'),
-         url(fonts/{1}.eot) format('embedded-opentype'),
-         url(fonts/{1}.ttf) format('truetype');
+    src: url(fonts/{1}.woff) format("woff"),
+         url(fonts/{1}.eot) format("embedded-opentype"),
+         url(fonts/{1}.ttf) format("truetype");
 }}}}
 .{0} {{{{
     font-family: {1};
@@ -226,11 +198,14 @@ def application(environ, start_response):
         + """</style>
 </head>
 <body>
+<div>
+    {}
+</div>
 {}
 <br />
 <hr>
 <br />
-Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.  
+Using most browsers, the cuneiform should appear on your screen, as the fonts are embedded in the website.
 However, if you wish to copy-and-paste (e.g. into a Word document), you may need to install the fonts in order for the
 characters to display correctly.  To install the fonts, follow the links below:
 <br />
@@ -250,11 +225,10 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 </body></html>"""
     )
 
-    response_body = response_body.format(body)
+    response_body = response_body.format(cuneiform_output, body)
     response_body = response_body.encode("utf-8")
 
     status = "200 OK"
-    # ctype = 'text/plain'
     ctype = "text/html"
     response_headers = [
         ("Content-Type", ctype),
@@ -267,9 +241,9 @@ by Steve Tinney. Created by Tom Gillam, 2016.
 # Below for testing only
 #
 if __name__ == "__main__":
+    MY_URL=""
     from wsgiref.simple_server import make_server
-
     httpd = make_server("localhost", 8051, application)
-    # Wait for a single request, serve it and quit.
-    httpd.handle_request()
-
+    print("Serving on http://localhost:8051")
+    while 1:
+        httpd.handle_request()

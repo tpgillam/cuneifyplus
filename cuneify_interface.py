@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 import itertools
 import os
 import pickle
@@ -140,8 +142,8 @@ class CuneiformCacheBase:
 
     @abstractmethod
     def __exit__(self, type_, value, traceback):
-        """Update the cache with the current transliteration, cuneiform pairs. 
-        
+        """Update the cache with the current transliteration, cuneiform pairs.
+
         It will overwrite the given values if present
         """
 
@@ -253,52 +255,93 @@ class FileCuneiformCache(CuneiformCacheBase):
         self._cache_modified = False
 
 
-def cuneify_line(cache, transliteration, show_transliteration):
-    """ Take a line of transliteration and display the output, nicely formatted, on the terminal.
-        Should be used whilst in the context of cache.
+def cuneify_line_structured(cache, transliteration):
+    """ Take a line of transliteration and return structured data (tuple) of
+        - tokens, eg `tok1`
+        - separators, eg `.`
+        - cuneiform symbols, eg `𒌉`
+        - unrecognized tokens, eg `Howdy`
     """
     transliteration = transliteration.strip()
     # Split using alphanumeric characters (\w)
     tokens = re.split(TOKEN_REGEX, transliteration)
 
-    # It's a much easier code path if we just show the cuneiform
-    if not show_transliteration:
-        return " ".join(cache.get_cuneiform(token) for token in tokens)
-
-    # Otherwise format something like this:
-    #
-    # tok1.tok2  tok3-tok4-5-   6
-    # A    BBBBB CC   DDD  EEEE F
     separators = re.findall(TOKEN_REGEX, transliteration)
     separators.append("")
-
     line_original = ""
     line_cuneiform = ""
-    for token, separator in zip(tokens, separators):
-        symbol = cache.get_cuneiform(token)
-        # FIXME -- take into account separator length (could be more than one
-        # character
-        n_spaces_after_symbol = 1 + max(len(separator) + len(token) - len(symbol), 0)
-        n_spaces_after_token_separator = 1 + max(len(symbol) - len(token), 0)
-        line_original += token + separator + " " * n_spaces_after_token_separator
-        line_cuneiform += symbol + " " * n_spaces_after_symbol
+    symbols = []
+    unrecognized_tokens = []
+    for token in tokens:
+        try:
+            symbol = cache.get_cuneiform(token)
+        except (UnrecognisedSymbol, TransliterationNotUnderstood):
+            symbol = None
+            unrecognized_tokens.append(token)
+        symbols.append(symbol)
 
-    return "{}\n{}".format(line_original, line_cuneiform)
+    return (tokens, separators, symbols, unrecognized_tokens)
+
+def cuneify_line(cache, transliteration, show_transliteration, unrecognized_indicator=""):
+    """ Take a line of transliteration and display the output, nicely formatted, on the terminal.
+        Should be used whilst in the context of cache.
+        unrecognized_indicator : String to display if token not recognized. If empty string,
+          the token will be returned as-is.
+    """
+
+    (tokens, separators, raw_symbols, unrecognized_tokens) = cuneify_line_structured(cache, transliteration)
+
+    # Substitube chosen string for unrecognized tokens
+    symbols = [s if s is not None else t if unrecognized_indicator=="" else unrecognized_indicator for (t, s) in zip(tokens, raw_symbols)]
+
+    if show_transliteration:
+        # Format tranliteratino under cuneiform, something like this:
+        #
+        # tok1.tok2  tok3-tok4-5-   6
+        # A    BBBBB CC   DDD  EEEE F
+        line_original = ""
+        line_cuneiform = ""
+        for token, separator, symbol in zip(tokens, separators, symbols):
+            if symbol is None:
+                symbol = token if unrecognized_indicator=="" else unrecognized_indicator
+            width = max(len(token + separator), len(symbol))
+            line_original += (token + separator).ljust(width)
+            line_cuneiform += symbol.ljust(width)
+        return "{}\n{}".format(line_original, line_cuneiform)
+    else:
+        return " ".join(symbols)
 
 
-def cuneify_file(cache, file_name, show_transliteration):
-    """ Given a text file with one or more lines of transliterated text, print out the corresponding
+def cuneify_iterator(cache, iterator, show_transliteration, parse_atf=True):
+    """ Given a iterator object that yields lines of transliterated text, return the corresponding
         version in cuneiform
     """
     output = ""
-    with open(file_name) as input_file:
-        for line in input_file:
+    if parse_atf:
+        for line in iterator:
+            atf_line_parts = re.search("^([0-9]+\.)([ \t]*)(.*)", line)
+            if atf_line_parts:
+                transliteration = atf_line_parts.group(3)
+                output += line
+                output += "#" + atf_line_parts.group(2) + cuneify_line(cache, transliteration, show_transliteration) + "\n"
+            else:
+                output += line
+    else:
+        for line in iterator:
             output += cuneify_line(cache, line, show_transliteration)
             output += "\n"
             # If also showing transliteration then an extra blank line aids legibility
             if show_transliteration:
                 output += "\n"
     return output
+
+
+def cuneify_file(cache, file_name, show_transliteration, parse_atf=True):
+    """ Given a text file with one or more lines of transliterated text, return the corresponding
+        version in cuneiform
+    """
+    with open(file_name) as iterator:
+        return cuneify_iterator(cache, iterator, show_transliteration, parse_atf=parse_atf)
 
 
 def ordered_symbol_to_transliterations(
@@ -356,6 +399,9 @@ def main():
         "also display original transliteration",
     )
     parser.add_argument(
+        "--parse-atf", action="store_true",
+        help="If this is set parse file as .atf formatted")
+    parser.add_argument(
         "--symbol-list",
         action="store_true",
         help="If this is set, show a mapping between the transliterated symbols and cuneiform.",
@@ -380,7 +426,7 @@ def main():
                 print("Unrecognised symbols:")
                 print(unrecognised_tokens)
         else:
-            print(cuneify_file(cache, args.input_file, args.show_transliteration))
+            print(cuneify_file(cache, args.input_file, args.show_transliteration, args.parse_atf))
 
 
 if __name__ == "__main__":
